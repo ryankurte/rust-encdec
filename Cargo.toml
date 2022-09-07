@@ -14,8 +14,8 @@ heapless = [ "encdec-base/heapless" ]
 
 [dependencies]
 
-encdec-base = { path = "./base" }
-encdec-macros = { path = "./macros" }
+encdec-base = { version = "0.1", path = "./base" }
+encdec-macros = { version = "0.1", path = "./macros" }
 
 [dev-dependencies]
 rand = "0.8.5"

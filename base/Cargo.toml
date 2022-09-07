@@ -8,4 +8,4 @@ license = "MPL-2.0"
 
 [dependencies]
 byteorder = { version = "1.4.3", default_features = false }
-heapless = { version = "*", default_features = false, optional = true }
+heapless = { version = "0.7.16", default_features = false, optional = true }
