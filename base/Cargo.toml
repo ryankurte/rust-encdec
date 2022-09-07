@@ -1,0 +1,11 @@
+[package]
+name = "encdec-base"
+description = "encdec simple encoder/decoder base types and traits"
+repository = "https://github.com/ryankurte/rust-encdec"
+version = "0.1.0"
+edition = "2021"
+license = "MPL-2.0"
+
+[dependencies]
+byteorder = { version = "1.4.3", default_features = false }
+heapless = { version = "*", default_features = false, optional = true }
