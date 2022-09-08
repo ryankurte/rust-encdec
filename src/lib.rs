@@ -5,7 +5,7 @@
 
 #![no_std]
 
-pub use encdec_base::{Encode, Decode};
+pub use encdec_base::{Encode, Decode, Error};
 
 pub use encdec_macros::{Encode, Decode};
 
