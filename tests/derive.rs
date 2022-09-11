@@ -49,12 +49,15 @@ fn array_derive() {
 }
 
 
+/// EXPERIMENTAL References with length descriptors
+/// 
+/// perhaps better to have a "delimited" mode? support for headers? 
+/// just require manual encode/decode impls?
 #[derive(Debug, PartialEq, Encode, Decode)]
 struct Refs<'a> {
+    #[encdec(length_of = "a")]
     l: u8,
 
-    // Length designator is -experimental-
-    // perhaps better to have a "delimited" mode? support for headers? just require manual encode/decode impls?
     #[encdec(length = "l")]
     a: &'a [u8],
 }
@@ -64,6 +67,20 @@ fn ref_derive() {
     let mut buff = [0u8; 256];
 
     test_encode_decode(&mut buff, Refs{ l: 3, a: &[random(), random(), random()] });
+}
+
+#[test]
+fn ref_encode_len() {
+    let mut buff = [0u8; 256];
+    let t = Refs{ l: 0, a: &[random(), random()] };
+
+    let encoded_len = t.encode(&mut buff).unwrap();
+    assert_eq!(encoded_len, 3);
+
+    let (d, decoded_len) = Refs::decode(&buff[..encoded_len]).unwrap();
+
+    assert_eq!(d, Refs{ l: 2, a: t.a });
+    assert_eq!(encoded_len, decoded_len);
 }
 
 #[derive(Debug, PartialEq, Encode, Decode)]

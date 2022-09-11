@@ -19,6 +19,8 @@ mod primitives;
 
 pub mod helpers;
 
+/// Composite trait requiring an object is both encodable and decodable
 pub trait EncDec<'a>: Encode + Decode<'a, Output=Self> {}
 
+/// Automatic implementation for types implementing [`Encode`] and [`Decode`]
 impl <'a, T: Encode + Decode<'a, Output=Self>> EncDec<'a> for T {}

@@ -26,7 +26,6 @@ pub fn derive_encode_impl(input: TokenStream) -> TokenStream {
 
     s.fields.iter().enumerate().for_each(|(i, f)| {
 
-
         let mut l = None;
 
         // Parse field attributes
@@ -65,7 +64,18 @@ pub fn derive_encode_impl(input: TokenStream) -> TokenStream {
             },
         };
 
-        let call_encode = quote!{ index += self.#id.encode(&mut buff[index..])?; };
+        let ty = &f.ty;
+
+        let call_encode = match l {
+            None => quote!{ 
+                index += self.#id.encode(&mut buff[index..])?;
+            },
+            Some(v) => quote!{ 
+                let n = self.#v.encode_len()?;
+                index += (n as #ty).encode(&mut buff[index..])?;
+            },
+        };
+
         let call_len = quote!{ index += self.#id.encode_len()?; };
 
         encoders.extend(call_encode);

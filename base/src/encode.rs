@@ -1,6 +1,8 @@
 
 use core::{fmt::Debug};
 
+use num_traits::FromPrimitive;
+
 use crate::Error;
 
 /// Encode trait implemented for binary encodable objects
@@ -100,5 +102,36 @@ impl Encode for &str {
         buff[..d.len()].copy_from_slice(d);
 
         Ok(d.len())
+    }
+}
+
+/// Encode for fields with prefixed lengths
+pub trait EncodePrefixed<P: Encode> {
+    /// Error type returned on parse error
+    type Error: Debug;
+
+    /// Parse method consumes a slice and returns an object
+    fn encode_prefixed(&self, buff: &mut [u8]) -> Result<usize, Self::Error>;
+}
+
+impl <'a, T, P> EncodePrefixed<P> for T 
+where
+    T: Encode,
+    P: Encode<Error=Error> + FromPrimitive,
+    <T as Encode>::Error: From<Error>,
+{
+    type Error = <T as Encode>::Error;
+
+    fn encode_prefixed(&self, buff: &mut [u8]) -> Result<usize, Self::Error> {
+        let mut index = 0;
+
+        // Compute encoded length and write prefix
+        let len = P::from_usize(self.encode_len()?).unwrap();
+        index += len.encode(buff)?;
+
+        // Encode object
+        index += self.encode(&mut buff[index..])?;
+
+        Ok(index)
     }
 }
