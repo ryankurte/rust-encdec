@@ -53,6 +53,8 @@ fn array_derive() {
 struct Refs<'a> {
     l: u8,
 
+    // Length designator is -experimental-
+    // perhaps better to have a "delimited" mode? support for headers? just require manual encode/decode impls?
     #[encdec(length = "l")]
     a: &'a [u8],
 }
@@ -62,4 +64,14 @@ fn ref_derive() {
     let mut buff = [0u8; 256];
 
     test_encode_decode(&mut buff, Refs{ l: 3, a: &[random(), random(), random()] });
+}
+
+#[derive(Debug, PartialEq, Encode, Decode)]
+struct Tuple(u8, u16);
+
+#[test]
+fn tuple_derive() {
+    let mut buff = [0u8; 256];
+
+    test_encode_decode(&mut buff, Tuple(random(), random()) );
 }

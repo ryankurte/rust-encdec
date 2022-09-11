@@ -24,7 +24,7 @@ pub fn derive_decode_impl(input: TokenStream) -> TokenStream {
     let mut fields = quote!{};
 
     // Fetch bounds for generics
-    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+    let (_impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
     s.fields.iter().enumerate().for_each(|(i, f)| {
         let ty = &f.ty;
@@ -46,7 +46,7 @@ pub fn derive_decode_impl(input: TokenStream) -> TokenStream {
             })
             .flatten();
 
-        println!("meta: {:?}", attribute_args);
+        //println!("meta: {:?}", attribute_args);
 
         if let Some(args) = attribute_args {
             for a in args.iter() {
