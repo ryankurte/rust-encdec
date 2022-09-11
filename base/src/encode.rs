@@ -1,5 +1,5 @@
 
-use core::fmt::Debug;
+use core::{fmt::Debug};
 
 use crate::Error;
 
@@ -80,5 +80,25 @@ where
         }
 
         Ok(index)
+    }
+}
+
+/// [`Encode`] implementation for [`str`]
+impl Encode for &str {
+    type Error = Error;
+
+    fn encode_len(&self) -> Result<usize, Self::Error> {
+        Ok(self.as_bytes().len())
+    }
+
+    fn encode(&self, buff: &mut [u8]) -> Result<usize, Self::Error> {
+        let d = self.as_bytes();
+        if buff.len() < d.encode_len()? {
+            return Err(Error::BufferOverrun.into());
+        }
+
+        buff[..d.len()].copy_from_slice(d);
+
+        Ok(d.len())
     }
 }

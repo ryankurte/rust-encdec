@@ -1,9 +1,10 @@
 
 
+use darling::FromMeta;
 use proc_macro::{TokenStream};
 
 use quote::{quote};
-use syn::{parse_macro_input, DeriveInput, Data};
+use syn::{parse_macro_input, DeriveInput, Data, NestedMeta, Meta, Lit};
 
 /// Encode derive helper
 pub fn derive_encode_impl(input: TokenStream) -> TokenStream {
@@ -16,38 +17,63 @@ pub fn derive_encode_impl(input: TokenStream) -> TokenStream {
         _ => panic!("Unsupported object type for derivation"),
     };
 
-    let _g = generics.params;
+    // Fetch bounds for generics
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
     // Build parser for each field
     let mut encoders = quote!{};
     let mut lengths = quote!{};
 
     s.fields.iter().enumerate().for_each(|(i, f)| {
-        let (e, l) = match f.ident.clone() {
-            Some(id) => {
-                (quote!{
-                    index += self.#id.encode(&mut buff[index..])?;
-                }, quote!{
-                    index += self.#id.encode_len()?;
-                })
-            },
+
+
+        let mut l = None;
+
+        // Parse field attributes
+        let attribute_args = f.attrs.iter()
+            .filter_map(|v| v.parse_meta().ok() )
+            .find(|v| v.path().is_ident("encdec"))
+            .map(|v| match v {
+                Meta::List(l) => Some(l.nested),
+                _ => None,
+            })
+            .flatten();
+
+        if let Some(args) = attribute_args {
+            for a in args.iter() {
+                let lit = match &a {
+                    NestedMeta::Meta(Meta::NameValue(v)) if v.path.is_ident("length_of") => v.lit.clone(),
+                    _ => continue,
+                };
+
+                match lit {
+                    Lit::Str(v) => l = {
+                        let f = v.value();
+                        let i = syn::Ident::from_string(&f).unwrap();
+                        Some(quote!{ #i })
+                    },
+                    _ => (),
+                }
+            }
+        }
+
+        let id = match f.ident.clone() {
+            Some(id) => quote!{ #id },
             None => {
                 let id = syn::Index::from(i);
-                (quote!{
-                    index += self.#id.encode(&mut buff[index..])?;
-                }, quote!{
-                    index += self.#id.encode_len()?;
-                })
-            }
+                quote!{ #id }
+            },
         };
 
-        encoders.extend(e);
-        lengths.extend(l);
+        let call_encode = quote!{ index += self.#id.encode(&mut buff[index..])?; };
+        let call_len = quote!{ index += self.#id.encode_len()?; };
 
+        encoders.extend(call_encode);
+        lengths.extend(call_len);
     });
 
     quote! {
-        impl encdec_base::Encode for #ident {
+        impl #impl_generics encdec_base::Encode for #ident #ty_generics #where_clause {
 
             type Error = encdec_base::Error;
 

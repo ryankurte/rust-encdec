@@ -6,6 +6,11 @@ version = "0.1.0"
 edition = "2021"
 license = "MPL-2.0"
 
+[features]
+heapless = [ "dep:heapless" ]
+
+default = [ "heapless" ]
+
 [dependencies]
 byteorder = { version = "1.4.3", default_features = false }
 heapless = { version = "0.7.16", default_features = false, optional = true }

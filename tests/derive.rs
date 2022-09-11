@@ -1,4 +1,6 @@
 
+#![feature(generic_associated_types)]
+
 use rand::random;
 
 use encdec::{Encode, Decode, helpers::test_encode_decode};
@@ -14,7 +16,9 @@ struct Basic {
 
 #[test]
 fn basic_derive() {
-    test_encode_decode(Basic{ a: random(), b: random(), c: random(), d: random() });
+    let mut buff = [0u8; 256];
+
+    test_encode_decode(&mut buff, Basic{ a: random(), b: random(), c: random(), d: random() });
 }
 
 #[test]
@@ -39,5 +43,23 @@ struct Arrays {
 
 #[test]
 fn array_derive() {
-    test_encode_decode(Arrays{ a: [random(), random(), random()] });
+    let mut buff = [0u8; 256];
+
+    test_encode_decode(&mut buff, Arrays{ a: [random(), random(), random()] });
+}
+
+
+#[derive(Debug, PartialEq, Encode, Decode)]
+struct Refs<'a> {
+    l: u8,
+
+    #[encdec(length = "l")]
+    a: &'a [u8],
+}
+
+#[test]
+fn ref_derive() {
+    let mut buff = [0u8; 256];
+
+    test_encode_decode(&mut buff, Refs{ l: 3, a: &[random(), random(), random()] });
 }

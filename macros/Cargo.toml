@@ -12,5 +12,6 @@ proc-macro = true
 [dependencies]
 syn = "1.0.99"
 quote = "1.0.21"
+darling = "*"
 
 encdec-base = { version = "0.1", path = "../base" }

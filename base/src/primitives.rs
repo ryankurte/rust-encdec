@@ -14,10 +14,11 @@ trait FixedEncDec: Sized {
     fn d(buff: &[u8]) -> Self;
 }
 
-impl <T: FixedEncDec + Debug + Sized> Decode for T {
+impl <'a, T: FixedEncDec + Debug + Sized> Decode<'a> for T {
+    type Output = T;
     type Error = Error;
 
-    fn decode<'a>(buff: &'a[u8]) -> Result<(Self, usize), Self::Error> {
+    fn decode(buff: &'a[u8]) -> Result<(Self, usize), Self::Error> {
         if buff.len() < T::N {
             return Err(Error::BufferOverrun);
         }

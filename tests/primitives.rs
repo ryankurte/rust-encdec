@@ -1,24 +1,30 @@
 
+#![feature(generic_associated_types)]
+
 use rand::random;
 
 use encdec::{Encode, Decode, helpers::test_encode_decode};
 
 #[test]
 fn encode_decode_u8() {
-    test_encode_decode::<u8>(random());
+    let mut buff = [0u8; 256];
+    test_encode_decode::<u8>(&mut buff, random());
 }
 
 #[test]
 fn encode_decode_u16() {
-    test_encode_decode::<u16>(random());
+    let mut buff = [0u8; 256];
+    test_encode_decode::<u16>(&mut buff, random());
 }
 
 #[test]
 fn encode_decode_u32() {
-    test_encode_decode::<u32>(random());
+    let mut buff = [0u8; 256];
+    test_encode_decode::<u32>(&mut buff, random());
 }
 
 #[test]
 fn encode_decode_u64() {
-    test_encode_decode::<u64>(random());
+    let mut buff = [0u8; 256];
+    test_encode_decode::<u64>(&mut buff, random());
 }
