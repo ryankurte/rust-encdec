@@ -83,12 +83,12 @@ pub fn derive_encode_impl(input: TokenStream) -> TokenStream {
     });
 
     quote! {
-        impl #impl_generics encdec_base::Encode for #ident #ty_generics #where_clause {
+        impl #impl_generics ::encdec::Encode for #ident #ty_generics #where_clause {
 
-            type Error = encdec_base::Error;
+            type Error = ::encdec::Error;
 
             fn encode_len(&self) -> Result<usize, Self::Error> {
-                use encdec_base::Encode;
+                use ::encdec::Encode;
 
                 let mut index = 0;
                 
@@ -98,7 +98,7 @@ pub fn derive_encode_impl(input: TokenStream) -> TokenStream {
             }
             
             fn encode(&self, buff: &mut [u8]) -> Result<usize, Self::Error> {
-                use encdec_base::Encode;
+                use ::encdec::Encode;
 
                 let mut index = 0;
                 

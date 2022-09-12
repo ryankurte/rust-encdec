@@ -1,0 +1,18 @@
+[package]
+name = "encdec"
+description = "binary object encoding / decoding helpers"
+repository = "https://github.com/ryankurte/rust-encdec"
+version = "0.2.0"
+edition = "2021"
+license = "MPL-2.0"
+
+[features]
+heapless = [ "encdec-base/heapless" ]
+
+[dependencies]
+
+encdec-base = { version = "0.1" }
+encdec-macros = { version = "0.1" }
+
+[dev-dependencies]
+rand = "0.8.5"

@@ -1,8 +1,8 @@
 
 
-use proc_macro::{TokenStream, Span};
+use proc_macro::{TokenStream};
 
-use darling::{FromAttributes, FromMeta};
+use darling::{FromMeta};
 use quote::{quote};
 use syn::{parse_macro_input, DeriveInput, Data, Fields, Ident, Meta, NestedMeta, Lifetime, Lit};
 
@@ -93,12 +93,12 @@ pub fn derive_decode_impl(input: TokenStream) -> TokenStream {
         .collect();
 
     quote! {
-        impl <'dec: #(#lts)+*, #(#lts),*> encdec_base::Decode<'dec> for #ident #ty_generics #where_clause {
+        impl <'dec: #(#lts)+*, #(#lts),*> ::encdec::Decode<'dec> for #ident #ty_generics #where_clause {
             type Output = Self;
-            type Error = encdec_base::Error;
+            type Error = ::encdec::Error;
             
             fn decode(buff: &'dec [u8]) -> Result<(Self::Output, usize), Self::Error> {
-                use encdec_base::*;
+                use ::encdec::{Decode, DecodedTagged, DecodePrefixed};
 
                 let mut index = 0;
                 
