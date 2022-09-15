@@ -2,7 +2,7 @@
 name = "encdec-macros"
 description = "encdec simple encoder/decoder derive macros"
 repository = "https://github.com/ryankurte/rust-encdec"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 license = "MPL-2.0"
 
@@ -14,4 +14,4 @@ syn = "1.0.99"
 quote = "1.0.21"
 darling = "0.14.1"
 
-encdec-base = { version = "0.3" }
+encdec-base = { version = "0.4.0" }

@@ -98,7 +98,7 @@ pub fn derive_decode_impl(input: TokenStream) -> TokenStream {
             type Error = ::encdec::Error;
             
             fn decode(buff: &'dec [u8]) -> Result<(Self::Output, usize), Self::Error> {
-                use ::encdec::{Decode, DecodedTagged, DecodePrefixed};
+                use ::encdec::{Decode, helpers::{DecodedTagged, DecodePrefixed}};
 
                 let mut index = 0;
                 
