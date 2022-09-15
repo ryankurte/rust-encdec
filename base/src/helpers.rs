@@ -1,4 +1,5 @@
-
+//! encdec test and encoding/decoding helpers
+//! 
 
 use core::{
     fmt::Debug,

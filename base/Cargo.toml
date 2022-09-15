@@ -8,10 +8,13 @@ license = "MPL-2.0"
 
 [features]
 heapless = [ "dep:heapless" ]
+std = [ "dep:thiserror" ]
 
-default = [ "heapless" ]
+default = [ "std", "heapless" ]
 
 [dependencies]
 byteorder = { version = "1.4.3", default_features = false }
-heapless = { version = "0.7.16", default_features = false, optional = true }
 num-traits = { version = "0.2.15", default_features = false }
+
+heapless = { version = "0.7.16", default_features = false, optional = true }
+thiserror = { version = "1.0.35", default_features = false, optional = true  }

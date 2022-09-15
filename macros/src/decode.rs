@@ -6,7 +6,6 @@ use darling::{FromMeta};
 use quote::{quote};
 use syn::{parse_macro_input, DeriveInput, Data, Fields, Ident, Meta, NestedMeta, Lifetime, Lit};
 
-use crate::Params;
 
 /// Decode derive helper
 pub fn derive_decode_impl(input: TokenStream) -> TokenStream {

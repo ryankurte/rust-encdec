@@ -1,10 +1,14 @@
-//! `encdec` crate base traits
+//! `encdec` base traits
+//! 
 
 #![feature(negative_impls)]
 #![feature(generic_associated_types)]
 #![feature(array_try_from_fn)]
 
 #![no_std]
+
+#[cfg(feature = "std")]
+extern crate std;
 
 mod encode;
 pub use encode::*;
@@ -15,7 +19,7 @@ pub use decode::*;
 mod error;
 pub use error::Error;
 
-mod primitives;
+pub mod primitives;
 
 pub mod helpers;
 

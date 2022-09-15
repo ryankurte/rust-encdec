@@ -1,8 +1,7 @@
 //! Encode/Decode implementations for primitive types
+//! 
 
-use core::fmt::Debug;
-
-use byteorder::{LittleEndian, ByteOrder};
+use byteorder::{LittleEndian as LE, ByteOrder};
 
 use crate::{Encode, Decode, Error};
 
@@ -14,91 +13,66 @@ trait FixedEncDec: Sized {
     fn d(buff: &[u8]) -> Self;
 }
 
-impl <'a, T: FixedEncDec + Debug + Sized> Decode<'a> for T {
-    type Output = T;
-    type Error = Error;
+/// Helper macro for implementing primitive encode / decode
+macro_rules! impl_encdec {
+    ($t:ty, $n:literal, $d:expr, $e:expr) => {
+        impl <'a> Decode<'a> for $t {
+            type Output = $t;
+            type Error = Error;
 
-    fn decode(buff: &'a[u8]) -> Result<(Self, usize), Self::Error> {
-        if buff.len() < T::N {
-            return Err(Error::BufferOverrun);
+            fn decode(buff: &'a[u8]) -> Result<(Self::Output, usize), Self::Error> {
+                if buff.len() < $n {
+                    return Err(Error::BufferOverrun);
+                }
+
+                let v = $d(&buff[..$n]);
+
+                Ok((v, $n))
+            }
         }
 
-        let d = T::d(&buff[..T::N]);
+        impl Encode for $t {
+            type Error = Error;
 
-        Ok((d, T::N))
-    }
-}
+            fn encode_len(&self) -> Result<usize, Self::Error> {
+                Ok($n)
+            }
 
-impl <T: FixedEncDec + Debug + Sized> Encode for T {
-    type Error = Error;
+            fn encode(&self, buff: &mut [u8]) -> Result<usize, Self::Error> {
+                if buff.len() < $n {
+                    return Err(Error::BufferOverrun);
+                }
 
-    fn encode_len(&self) -> Result<usize, Self::Error> {
-        Ok(T::N)
-    }
+                $e(&mut buff[..$n], *self);
 
-    fn encode(&self, buff: &mut [u8]) -> Result<usize, Self::Error> {
-        if buff.len() < T::N {
-            return Err(Error::BufferOverrun);
+                Ok($n)
+            }
         }
-
-        T::e(self, &mut buff[..T::N]);
-
-        Ok(T::N)
-    }
+    };
 }
 
-impl FixedEncDec for u8 {
-    const N: usize = 1;
+impl_encdec!(u8,  1, get_u8, put_u8);
+impl_encdec!(i8,  1, get_i8, put_i8);
+impl_encdec!(u16, 2, LE::read_u16, LE::write_u16);
+impl_encdec!(i16, 2, LE::read_i16, LE::write_i16);
+impl_encdec!(u32, 4, LE::read_u32, LE::write_u32);
+impl_encdec!(i32, 4, LE::read_i32, LE::write_i32);
+impl_encdec!(u64, 8, LE::read_u64, LE::write_u64);
+impl_encdec!(i64, 8, LE::read_i64, LE::write_i64);
 
-    fn e(&self, buff: &mut [u8]) -> () { buff[0] = *self; }
-    fn d(buff: &[u8]) -> Self { buff[0] }
+
+fn get_u8(buff: &[u8]) -> u8 {
+    buff[0]
 }
 
-impl FixedEncDec for u16 {
-    const N: usize = 2;
-
-    fn e(&self, buff: &mut [u8]) -> () { LittleEndian::write_u16(&mut buff[..Self::N], *self) }
-    fn d(buff: &[u8]) -> Self { LittleEndian::read_u16(&buff[..Self::N]) }
+fn get_i8(buff: &[u8]) -> i8 {
+    buff[0] as i8
 }
 
-impl FixedEncDec for u32 {
-    const N: usize = 4;
-
-    fn e(&self, buff: &mut [u8]) -> () { LittleEndian::write_u32(&mut buff[..Self::N], *self) }
-    fn d(buff: &[u8]) -> Self { LittleEndian::read_u32(&buff[..Self::N]) }
+fn put_u8(buff: &mut [u8], val: u8) {
+    buff[0] = val;
 }
 
-impl FixedEncDec for u64 {
-    const N: usize = 8;
-
-    fn e(&self, buff: &mut [u8]) -> () { LittleEndian::write_u64(&mut buff[..Self::N], *self) }
-    fn d(buff: &[u8]) -> Self { LittleEndian::read_u64(&buff[..Self::N]) }
-}
-
-impl FixedEncDec for i8 {
-    const N: usize = 1;
-
-    fn e(&self, buff: &mut [u8]) -> () { buff[0] = *self as u8; }
-    fn d(buff: &[u8]) -> Self { buff[0] as i8 }
-}
-
-impl FixedEncDec for i16 {
-    const N: usize = 2;
-
-    fn e(&self, buff: &mut [u8]) -> () { LittleEndian::write_i16(&mut buff[..Self::N], *self) }
-    fn d(buff: &[u8]) -> Self { LittleEndian::read_i16(&buff[..Self::N]) }
-}
-
-impl FixedEncDec for i32 {
-    const N: usize = 4;
-
-    fn e(&self, buff: &mut [u8]) -> () { LittleEndian::write_i32(&mut buff[..Self::N], *self) }
-    fn d(buff: &[u8]) -> Self { LittleEndian::read_i32(&buff[..Self::N]) }
-}
-
-impl FixedEncDec for i64 {
-    const N: usize = 8;
-
-    fn e(&self, buff: &mut [u8]) -> () { LittleEndian::write_i64(&mut buff[..Self::N], *self) }
-    fn d(buff: &[u8]) -> Self { LittleEndian::read_i64(&buff[..Self::N]) }
+fn put_i8(buff: &mut [u8], val: i8) {
+    buff[0] = val as u8;
 }

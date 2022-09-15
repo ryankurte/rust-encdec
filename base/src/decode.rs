@@ -1,9 +1,6 @@
+//! [`Decode`] trait implementation
 
-
-use core::{fmt::Debug, str::from_utf8, marker::PhantomData};
-
-use num_traits::AsPrimitive;
-
+use core::{fmt::Debug, marker::PhantomData};
 
 use crate::Error;
 

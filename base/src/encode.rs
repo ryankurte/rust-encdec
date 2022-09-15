@@ -1,3 +1,4 @@
+//! [`Encode`] trait implementation
 
 use core::{fmt::Debug};
 

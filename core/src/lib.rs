@@ -1,51 +1,36 @@
-//! Simple object encoding / decoding traits and helpers
+//! Binary object encoding / decoding traits and helper macros
 //! 
-//! This is intend to provide common traits for marking objects as binary encode/decode-able,
-//! as well as derive macros to propagate these traits through structures without manual effort.
+//! This crate provides common [`Encode`] and [`Decode`] 
+//! traits for marking objects as binary encode/decode-able,
+//! as well as derive macros to propagate these and 
+//! implementations for basic types.
 //! 
-//! See [`encdec_base::Encode`] and [`encdec_base::Decode`] traits for more information.
-//! 
-//! 
-//! ### Encode
 //! ```
-//! use encdec::{Encode, Decode};
+//! # use encdec::{Encode, Decode, Error};
 //! #[derive(Debug, PartialEq, Encode, Decode)]
-//! struct Basic {
+//! struct SomeA {
 //!     a: u8,
 //!     b: u16,
+//!     c: u8,
 //! }
+//! # let mut buff = [0u8; 16];
 //! 
-//! let t = Basic{ a: 0x10, b: 0xabcd };
+//! let a1 = SomeA{ a: 0x10, b: 0xabcd, c: 0x11 };
+//! let n1 = a1.encode(&mut buff[..]).unwrap();
 //! 
-//! let mut buff = [0u8; 16];
-//! let n = t.encode(&mut buff).expect("encode failed");
-//! 
-//! assert_eq!(&buff[..n], &[0x10, 0xcd, 0xab]);
-//! assert_eq!(n, 3);
-//! 
+//! // Encoded data is little endian, ordered by struct field
+//! assert_eq!(&buff[..n1], &[0x10, 0xcd, 0xab, 0x11]);
+//!
+//! let (a2, n2) = SomeA::decode(&buff[..n1]).unwrap();
+//! assert_eq!(a1, a2);
 //! ```
-//! //! ### Decode
-//! ```
-//! use encdec::{Encode, Decode};
-//! #[derive(Debug, PartialEq, Encode, Decode)]
-//! struct Basic {
-//!     a: u8,
-//!     b: u16,
-//! }
 //! 
-//! let (t, n) = Basic::decode(&[0x12, 0xcd, 0xab]).expect("decode failed");
-//! 
-//! assert_eq!(t, Basic{ a: 0x12, b: 0xabcd });
-//! assert_eq!(n, 3);
-//! 
-//! ```
-
-#![feature(generic_associated_types)]
+//! For detail on derived implementations see the [Encode][encdec_macros::Encode] and [Decode][encdec_macros::Decode] macros.
 
 #![no_std]
 
 pub use encdec_base::{
-    Encode, Decode, Error,
+    EncDec, Encode, Decode, Error,
 };
 
 pub use encdec_macros::{Encode, Decode};
