@@ -2,7 +2,7 @@
 name = "encdec"
 description = "binary object encoding / decoding helpers"
 repository = "https://github.com/ryankurte/rust-encdec"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 license = "MPL-2.0"
 
@@ -11,8 +11,8 @@ heapless = [ "encdec-base/heapless" ]
 
 [dependencies]
 
-encdec-base = { version = "0.1" }
-encdec-macros = { version = "0.1" }
+encdec-base = { version = "0.3" }
+encdec-macros = { version = "0.3" }
 
 [dev-dependencies]
 rand = "0.8.5"
