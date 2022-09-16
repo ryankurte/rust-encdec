@@ -1,10 +1,11 @@
 //! Binary object encoding / decoding traits and helper macros
 //! 
 //! This crate provides common [`Encode`] and [`Decode`] 
-//! traits for marking objects as binary encode/decode-able,
+//! traits for describing binary encode/decode-able objects,
 //! as well as derive macros to propagate these and 
-//! implementations for basic types.
+//! little-endian implementations for primitive types.
 //! 
+//! ### Derive
 //! ```
 //! # use encdec::{Encode, Decode, Error};
 //! #[derive(Debug, PartialEq, Encode, Decode)]

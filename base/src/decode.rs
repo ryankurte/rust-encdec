@@ -6,16 +6,18 @@ use crate::Error;
 
 /// Decode trait implemented for binary decodable objects
 pub trait Decode<'a>: Sized {
-    /// Output type (required for lifetime bounds)
+    /// Output type (allows attaching lifetime bounds where required)
     type Output: Debug;
 
     /// Error type returned on parse error
     type Error: Debug;
 
-    /// Decode consumes a slice and returns an object and decoded length
+    /// Decode consumes a slice and returns an object and decoded length.
     fn decode(buff: &'a [u8]) -> Result<(Self::Output, usize), Self::Error>;
 
-    /// Helper to iterate over decodable objects in a _sized_ buffer
+    /// Helper to iterate over decodable objects in a _sized_ buffer.
+    /// 
+    /// Note that objects must be -internally- sized as this is a greedy operation
     fn decode_iter(buff: &'a [u8]) -> DecodeIter<'a, Self::Output, Self::Error> {
         DecodeIter {
             buff,

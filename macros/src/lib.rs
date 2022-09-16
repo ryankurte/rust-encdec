@@ -9,8 +9,9 @@ mod encode;
 mod decode;
 
 
-/// `#[derive(Encode)]` support, 
-/// generates an [`encdec::Encode`]implementation equivalent to calling `.encode()` on each field in order.
+/// `#[derive(Encode)]` support.
+/// 
+/// generates an [`Encode`][encdec_base::Encode] implementation equivalent to calling `.encode()` on each field in order.
 /// 
 /// for example:
 /// ```
@@ -51,8 +52,9 @@ pub fn derive_encode_impl(input: TokenStream) -> TokenStream {
     encode::derive_encode_impl(input)
 }
 
-/// `#[derive(Decode)]` support, 
-/// generates a [`Decode`] implementation equivalent to calling `.decode()` on each field in order.
+/// `#[derive(Decode)]` support.
+/// 
+/// generates a [`Decode`][encdec_base::Decode] implementation equivalent to calling `.decode()` on each field in order.
 /// 
 /// for example:
 /// ```

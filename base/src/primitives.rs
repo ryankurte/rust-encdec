@@ -20,6 +20,7 @@ macro_rules! impl_encdec {
             type Output = $t;
             type Error = Error;
 
+            #[inline]
             fn decode(buff: &'a[u8]) -> Result<(Self::Output, usize), Self::Error> {
                 if buff.len() < $n {
                     return Err(Error::BufferOverrun);
@@ -34,10 +35,12 @@ macro_rules! impl_encdec {
         impl Encode for $t {
             type Error = Error;
 
+            #[inline]
             fn encode_len(&self) -> Result<usize, Self::Error> {
                 Ok($n)
             }
 
+            #[inline]
             fn encode(&self, buff: &mut [u8]) -> Result<usize, Self::Error> {
                 if buff.len() < $n {
                     return Err(Error::BufferOverrun);
@@ -61,18 +64,22 @@ impl_encdec!(u64, 8, LE::read_u64, LE::write_u64);
 impl_encdec!(i64, 8, LE::read_i64, LE::write_i64);
 
 
+#[inline]
 fn get_u8(buff: &[u8]) -> u8 {
     buff[0]
 }
 
+#[inline]
 fn get_i8(buff: &[u8]) -> i8 {
     buff[0] as i8
 }
 
+#[inline]
 fn put_u8(buff: &mut [u8], val: u8) {
     buff[0] = val;
 }
 
+#[inline]
 fn put_i8(buff: &mut [u8], val: i8) {
     buff[0] = val as u8;
 }
