@@ -7,7 +7,6 @@ This is intended for use where you need to binary encode objects to suit a parti
 ## Status
 
 [![GitHub tag](https://img.shields.io/github/tag/ryankurte/rust-encdec.svg)](https://github.com/ryankurte/rust-encdec)
-![Build Status](https://github.com/ryankurte/rust-encdec/workflows/Rust/badge.svg)
+[![Build Status](https://github.com/ryankurte/rust-encdec/actions/workflows/rust.yml/badge.svg)](https://github.com/ryankurte/rust-encdec/actions/workflows/rust.yml)
 [![Crates.io](https://img.shields.io/crates/v/encdec.svg)](https://crates.io/crates/encdec)
 [![Docs.rs](https://docs.rs/encdec/badge.svg)](https://docs.rs/encdec)
-
