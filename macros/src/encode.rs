@@ -6,6 +6,8 @@ use proc_macro::{TokenStream};
 use quote::{quote};
 use syn::{parse_macro_input, DeriveInput, Data, NestedMeta, Meta, Lit};
 
+use crate::attrs::Attrs;
+
 /// Encode derive helper
 pub fn derive_encode_impl(input: TokenStream) -> TokenStream {
 
@@ -26,36 +28,10 @@ pub fn derive_encode_impl(input: TokenStream) -> TokenStream {
 
     s.fields.iter().enumerate().for_each(|(i, f)| {
 
-        let mut l = None;
-
         // Parse field attributes
-        let attribute_args = f.attrs.iter()
-            .filter_map(|v| v.parse_meta().ok() )
-            .find(|v| v.path().is_ident("encdec"))
-            .map(|v| match v {
-                Meta::List(l) => Some(l.nested),
-                _ => None,
-            })
-            .flatten();
+        let attrs = Attrs::parse(f.attrs.iter());
 
-        if let Some(args) = attribute_args {
-            for a in args.iter() {
-                let lit = match &a {
-                    NestedMeta::Meta(Meta::NameValue(v)) if v.path.is_ident("length_of") => v.lit.clone(),
-                    _ => continue,
-                };
-
-                match lit {
-                    Lit::Str(v) => l = {
-                        let f = v.value();
-                        let i = syn::Ident::from_string(&f).unwrap();
-                        Some(quote!{ #i })
-                    },
-                    _ => (),
-                }
-            }
-        }
-
+        // Generate field identifier
         let id = match f.ident.clone() {
             Some(id) => quote!{ #id },
             None => {
@@ -66,17 +42,28 @@ pub fn derive_encode_impl(input: TokenStream) -> TokenStream {
 
         let ty = &f.ty;
 
-        let call_encode = match l {
-            None => quote!{ 
+        let call_encode = match (attrs.encode, attrs.length_of) {
+            // Encode method override
+            (Some(e), _) => quote!{
+                index += #e(&self.#id, &mut buff[index..])?;
+            },
+            // Normal fields using normal encode
+            (_, None) => quote!{ 
                 index += self.#id.encode(&mut buff[index..])?;
             },
-            Some(v) => quote!{ 
+            // `length_of` types filled using length of target field
+            (_, Some(v)) => quote!{ 
                 let n = self.#v.encode_len()?;
                 index += (n as #ty).encode(&mut buff[index..])?;
             },
         };
 
-        let call_len = quote!{ index += self.#id.encode_len()?; };
+        let call_len = match attrs.encode_len {
+            // Encode length override
+            Some(l) => quote!{ index += #l(&self.#id)?; },
+            // Default encode length method
+            None => quote!{ index += self.#id.encode_len()?; },
+        };
 
         encoders.extend(call_encode);
         lengths.extend(call_len);

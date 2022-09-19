@@ -7,6 +7,7 @@ use proc_macro::{TokenStream};
 
 mod encode;
 mod decode;
+mod attrs;
 
 
 /// `#[derive(Encode)]` support.

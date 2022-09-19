@@ -3,7 +3,7 @@
 
 use rand::random;
 
-use encdec::{Encode, Decode, helpers::test_encode_decode};
+use encdec::{Encode, Decode, Error, helpers::test_encode_decode};
 
 
 #[derive(Debug, PartialEq, Encode, Decode)]
@@ -49,6 +49,17 @@ fn array_derive() {
 }
 
 
+#[derive(Debug, PartialEq, Encode, Decode)]
+struct Tuple(u8, u16);
+
+#[test]
+fn tuple_derive() {
+    let mut buff = [0u8; 256];
+
+    test_encode_decode(&mut buff, Tuple(random(), random()) );
+}
+
+
 /// EXPERIMENTAL References with length descriptors
 /// 
 /// perhaps better to have a "delimited" mode? support for headers? 
@@ -83,12 +94,48 @@ fn ref_encode_len() {
     assert_eq!(encoded_len, decoded_len);
 }
 
+/// Override encode and decode functions via macro
 #[derive(Debug, PartialEq, Encode, Decode)]
-struct Tuple(u8, u16);
+struct Overrides {
+    #[encdec(enc="u64_enc", enc_len="u64_enc_len", dec="u64_dec")]
+    a: u64,
+}
 
 #[test]
-fn tuple_derive() {
+fn overrides() {
     let mut buff = [0u8; 256];
 
-    test_encode_decode(&mut buff, Tuple(random(), random()) );
+    let a = random();
+
+    test_encode_decode(&mut buff, Overrides{ a });
+
+    assert_eq!(buff[0], 0xFF);
+    assert_eq!(&buff[1..][..8], &a.to_be_bytes());
+}
+
+fn u64_enc(v: &u64, buff: &mut [u8]) -> Result<usize, Error> {
+    if buff.len() < 9 {
+        return Err(Error::BufferOverrun);
+    }
+
+    buff[0] = 0xFF;
+
+    buff[1..][..8].copy_from_slice(&v.to_be_bytes());
+
+    Ok(9)
+}
+
+fn u64_enc_len(v: &u64) -> Result<usize, Error> {
+    Ok(9)
+}
+
+fn u64_dec(buff: &[u8]) -> Result<(u64, usize), Error> {
+    if buff.len() < 9 {
+        return Err(Error::BufferOverrun);
+    }
+
+    let mut d = [0u8; 8];
+    d.copy_from_slice(&buff[1..][..8]);
+
+    Ok((u64::from_be_bytes(d), 9))
 }

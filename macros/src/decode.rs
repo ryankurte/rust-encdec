@@ -6,6 +6,8 @@ use darling::{FromMeta};
 use quote::{quote};
 use syn::{parse_macro_input, DeriveInput, Data, Fields, Ident, Meta, NestedMeta, Lifetime, Lit};
 
+use crate::attrs::Attrs;
+
 
 /// Decode derive helper
 pub fn derive_decode_impl(input: TokenStream) -> TokenStream {
@@ -33,45 +35,19 @@ pub fn derive_decode_impl(input: TokenStream) -> TokenStream {
             None => Ident::new(&format!("_{}", i), ident.span()),
         };
 
-        let mut l = None;
-
         // Parse field attributes
-        let attribute_args = f.attrs.iter()
-            .filter_map(|v| v.parse_meta().ok() )
-            .find(|v| v.path().is_ident("encdec"))
-            .map(|v| match v {
-                Meta::List(l) => Some(l.nested),
-                _ => None,
-            })
-            .flatten();
+        let attrs = Attrs::parse(f.attrs.iter());
 
-        //println!("meta: {:?}", attribute_args);
-
-        if let Some(args) = attribute_args {
-            for a in args.iter() {
-                let lit = match &a {
-                    NestedMeta::Meta(Meta::NameValue(v)) if v.path.is_ident("length") => v.lit.clone(),
-                    _ => continue,
-                };
-
-                match lit {
-                    Lit::Int(v) => l = Some(quote!{ #v }),
-                    Lit::Str(v) => l = {
-                        let f = v.value();
-                        let i = syn::Ident::from_string(&f).unwrap();
-                        Some(quote!{ #i })
-                    },
-                    _ => (),
-                }
-            }
-        }
-
-        match l {        
-            None => parsers.extend(quote!{
+        match (attrs.decode, attrs.length) {    
+            (Some(d), _) => parsers.extend(quote!{
+                let (#id, n) = #d(&buff[index..])?;
+                index += n;
+            }),
+            (_, None) => parsers.extend(quote!{
                 let (#id, n) = <#ty>::decode(&buff[index..])?;
                 index += n;
             }),
-            Some(l) => parsers.extend(quote!{
+            (_, Some(l)) => parsers.extend(quote!{
                 let n = #l as usize;
                 let #id = <#ty>::decode_len(&buff[index..], n)?;
                 index += n;
@@ -97,7 +73,7 @@ pub fn derive_decode_impl(input: TokenStream) -> TokenStream {
             type Error = ::encdec::Error;
             
             fn decode(buff: &'dec [u8]) -> Result<(Self::Output, usize), Self::Error> {
-                use ::encdec::{Decode, helpers::{DecodedTagged, DecodePrefixed}};
+                use ::encdec::decode::{Decode, DecodedTagged, DecodePrefixed};
 
                 let mut index = 0;
                 

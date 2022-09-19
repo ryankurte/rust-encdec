@@ -34,7 +34,7 @@ impl <'a, T: Decode<'a>> DecodeExt<'a> for T {}
 
 /// Decode for owned types, avoids lifetime constraints
 pub trait DecodeOwned {
-    /// Output type (allows attaching lifetime bounds where required)
+    /// Output type
     type Output: Debug;
 
     /// Error type returned on parse error
