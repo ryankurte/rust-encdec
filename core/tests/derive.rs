@@ -102,7 +102,7 @@ struct Overrides {
 }
 
 #[test]
-fn overrides() {
+fn override_enc_dec() {
     let mut buff = [0u8; 256];
 
     let a = random();
@@ -138,4 +138,47 @@ fn u64_dec(buff: &[u8]) -> Result<(u64, usize), Error> {
     d.copy_from_slice(&buff[1..][..8]);
 
     Ok((u64::from_be_bytes(d), 9))
+}
+
+/// Override error type via macro
+#[derive(Debug, PartialEq, Encode, Decode)]
+#[encdec(error="NewError")]
+struct OverrideError {
+    a: u64,
+}
+
+#[derive(Clone, PartialEq, Debug)]
+enum NewError {
+    Length,
+    Utf8,
+}
+
+impl From<encdec::Error> for NewError {
+    fn from(e: encdec::Error) -> Self {
+        match e {
+            Error::BufferOverrun => Self::Length,
+            Error::Utf8Error => Self::Utf8,
+        }
+    }
+}
+
+#[test]
+fn override_error() {
+    let mut buff = [0u8; 256];
+
+    let t = OverrideError{ a: random() };
+
+    let n = match t.encode(&mut buff) {
+        Ok(n) => n,
+        Err(NewError::Length) => panic!(),
+        Err(NewError::Utf8) => panic!(),
+    };
+
+    let (t1, _n1) = match OverrideError::decode(&buff[..n]) {
+        Ok(v) => v,
+        Err(NewError::Length) => panic!(),
+        Err(NewError::Utf8) => panic!(),
+    };
+
+    assert_eq!(t, t1);
 }

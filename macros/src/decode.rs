@@ -6,19 +6,23 @@ use darling::{FromMeta};
 use quote::{quote};
 use syn::{parse_macro_input, DeriveInput, Data, Fields, Ident, Meta, NestedMeta, Lifetime, Lit};
 
-use crate::attrs::Attrs;
+use crate::attrs::{FieldAttrs, StructAttrs};
 
 
 /// Decode derive helper
 pub fn derive_decode_impl(input: TokenStream) -> TokenStream {
 
-    let DeriveInput { ident, data, generics, .. } = parse_macro_input!(input);
+    let DeriveInput { ident, data, generics, attrs, .. } = parse_macro_input!(input);
 
     // Extract struct fields
     let s = match data {
         Data::Struct(s) => s,
         _ => panic!("Unsupported object type for derivation"),
     };
+
+    // Parse struct attributes
+    let struct_attrs = StructAttrs::parse(attrs.iter());
+
 
     // Build parser for each field
     let mut parsers = quote!{};
@@ -36,7 +40,7 @@ pub fn derive_decode_impl(input: TokenStream) -> TokenStream {
         };
 
         // Parse field attributes
-        let attrs = Attrs::parse(f.attrs.iter());
+        let attrs = FieldAttrs::parse(f.attrs.iter());
 
         match (attrs.decode, attrs.length) {    
             (Some(d), _) => parsers.extend(quote!{
@@ -67,10 +71,16 @@ pub fn derive_decode_impl(input: TokenStream) -> TokenStream {
         .map(|v| Lifetime::from(v.lifetime.clone()) )
         .collect();
 
+    // Override error return type if specified
+    let err = match struct_attrs.error {
+        Some(e) => quote!(#e),
+        None => quote!(::encdec::Error),
+    };
+
     quote! {
         impl <'dec: #(#lts)+*, #(#lts),*> ::encdec::Decode<'dec> for #ident #ty_generics #where_clause {
             type Output = Self;
-            type Error = ::encdec::Error;
+            type Error = #err;
             
             fn decode(buff: &'dec [u8]) -> Result<(Self::Output, usize), Self::Error> {
                 use ::encdec::decode::{Decode, DecodedTagged, DecodePrefixed};

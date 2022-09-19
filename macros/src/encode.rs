@@ -6,18 +6,21 @@ use proc_macro::{TokenStream};
 use quote::{quote};
 use syn::{parse_macro_input, DeriveInput, Data, NestedMeta, Meta, Lit};
 
-use crate::attrs::Attrs;
+use crate::attrs::{FieldAttrs, StructAttrs};
 
 /// Encode derive helper
 pub fn derive_encode_impl(input: TokenStream) -> TokenStream {
 
-    let DeriveInput { ident, data, generics, .. } = parse_macro_input!(input);
+    let DeriveInput { ident, data, generics, attrs, .. } = parse_macro_input!(input);
 
     // Extract struct fields
     let s = match data {
         Data::Struct(s) => s,
         _ => panic!("Unsupported object type for derivation"),
     };
+
+    // Parse struct attributes
+    let struct_attrs = StructAttrs::parse(attrs.iter());
 
     // Fetch bounds for generics
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
@@ -29,7 +32,7 @@ pub fn derive_encode_impl(input: TokenStream) -> TokenStream {
     s.fields.iter().enumerate().for_each(|(i, f)| {
 
         // Parse field attributes
-        let attrs = Attrs::parse(f.attrs.iter());
+        let attrs = FieldAttrs::parse(f.attrs.iter());
 
         // Generate field identifier
         let id = match f.ident.clone() {
@@ -69,10 +72,16 @@ pub fn derive_encode_impl(input: TokenStream) -> TokenStream {
         lengths.extend(call_len);
     });
 
+    // Override error return type if specified
+    let err = match struct_attrs.error {
+        Some(e) => quote!(#e),
+        None => quote!(::encdec::Error),
+    };
+
     quote! {
         impl #impl_generics ::encdec::Encode for #ident #ty_generics #where_clause {
 
-            type Error = ::encdec::Error;
+            type Error = #err;
 
             fn encode_len(&self) -> Result<usize, Self::Error> {
                 use ::encdec::Encode;

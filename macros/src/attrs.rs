@@ -6,7 +6,67 @@ use syn::{Attribute, Meta, NestedMeta, Lit};
 
 
 #[derive(Clone, Debug)]
-pub struct Attrs {
+pub struct StructAttrs {
+    /// Error type for derived methods
+    pub error: Option<TokenStream>,
+}
+
+impl Default for StructAttrs {
+    fn default() -> Self {
+        Self { 
+            error: None,
+        }
+    }
+}
+
+impl StructAttrs {
+    /// Parse [`StructAttrs`] object from field attributes
+    pub fn parse<'a>(attrs: impl Iterator<Item=&'a Attribute>) -> Self {
+        // Filter for `encdec` attribute group
+        let attribute_args = attrs
+            .filter_map(|v| v.parse_meta().ok() )
+            .find(|v| v.path().is_ident("encdec"))
+            .map(|v| match v {
+                Meta::List(l) => Some(l.nested),
+                _ => None,
+            })
+            .flatten();
+        
+        let attrs = match attribute_args {
+            Some(a) => a,
+            None => return Default::default(),
+        };
+
+        let mut s = Self::default();
+
+        // Parse attributes
+        for a in attrs {
+            // Filter NameValue attributes
+            let v = match a {
+                NestedMeta::Meta(Meta::NameValue(v)) => v,
+                _ => continue,
+            };
+
+            // Process literal from value
+            let l = match lit_to_quote(&v.lit) {
+                Some(l) => l,
+                None => continue,
+            };
+
+            // Match keys to set attribute values
+
+            // Lengths for tagged values
+            if v.path.is_ident("error") {
+                s.error = Some(l.into());
+            }
+        }
+
+        s
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct FieldAttrs {
     /// Reference to length for decoding
     pub length: Option<TokenStream>,
 
@@ -23,7 +83,7 @@ pub struct Attrs {
     pub decode: Option<TokenStream>,
 }
 
-impl Attrs {
+impl FieldAttrs {
     /// Parse [`Attrs`] object from field attributes
     pub fn parse<'a>(attrs: impl Iterator<Item=&'a Attribute>) -> Self {
         // Filter for `encdec` attribute group
@@ -38,13 +98,13 @@ impl Attrs {
         
         // Parse encdec attributes
         match attribute_args {
-            Some(a) => Attrs::from(a.iter()),
-            None => Attrs::default(),
+            Some(a) => FieldAttrs::from(a.iter()),
+            None => FieldAttrs::default(),
         }
     }
 }
 
-impl Default for Attrs {
+impl Default for FieldAttrs {
     fn default() -> Self {
         Self { 
             length: None,
@@ -56,8 +116,20 @@ impl Default for Attrs {
     }
 }
 
+fn lit_to_quote(lit: &Lit) -> Option<TokenStream> {
+    match lit {
+        Lit::Int(v) => Some(quote!{ #v }),
+        Lit::Str(v) => {
+            let f = v.value();
+            let i = syn::Ident::from_string(&f).unwrap();
+            Some(quote!{ #i })
+        },
+        _ => None,
+    }
+}
+
 /// Create [`Attrs`] object from [`NestedMeta`] fields
-impl <'a, T: Iterator<Item=&'a NestedMeta>> From<T> for Attrs {
+impl <'a, T: Iterator<Item=&'a NestedMeta>> From<T> for FieldAttrs {
     fn from(args: T) -> Self {
         let mut s = Self::default();
 
@@ -70,17 +142,7 @@ impl <'a, T: Iterator<Item=&'a NestedMeta>> From<T> for Attrs {
             };
 
             // Process literal from value
-            let l = match &v.lit {
-                Lit::Int(v) => Some(quote!{ #v }),
-                Lit::Str(v) => {
-                    let f = v.value();
-                    let i = syn::Ident::from_string(&f).unwrap();
-                    Some(quote!{ #i })
-                },
-                _ => None,
-            };
-
-            let l = match l {
+            let l = match lit_to_quote(&v.lit) {
                 Some(l) => l,
                 None => continue,
             };
@@ -102,8 +164,6 @@ impl <'a, T: Iterator<Item=&'a NestedMeta>> From<T> for Attrs {
                 s.decode = Some(l.into());
             }
         }
-
-        println!("Attrs: {:?}", s);
 
         // Return attribute object
         s
