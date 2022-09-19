@@ -14,7 +14,7 @@ std = [ "encdec-base/std" ]
 
 [dependencies]
 
-encdec-base = { version = "0.5.0", default_features = false }
+encdec-base = { version = "^0.6.0", default_features = false }
 encdec-macros = { version = "0.5.0" }
 
 [dev-dependencies]
