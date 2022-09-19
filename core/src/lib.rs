@@ -31,7 +31,9 @@
 #![no_std]
 
 pub use encdec_base::{
-    EncDec, Encode, Decode, Error,
+    EncDec, Error,
+    encode::{self, Encode, EncodeExt},
+    decode::{self, Decode, DecodeExt},
 };
 
 pub use encdec_macros::{Encode, Decode};

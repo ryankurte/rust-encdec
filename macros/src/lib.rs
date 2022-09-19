@@ -11,11 +11,11 @@ mod decode;
 
 /// `#[derive(Encode)]` support.
 /// 
-/// generates an [`Encode`][encdec_base::Encode] implementation equivalent to calling `.encode()` on each field in order.
+/// generates an [`Encode`][encdec_base::encode::Encode] implementation equivalent to calling `.encode()` on each field in order.
 /// 
 /// for example:
 /// ```
-/// # use encdec_base::Encode;
+/// # use encdec_base::{encode::Encode, Error};
 /// #[derive(Debug, PartialEq)]
 /// struct Something {
 ///     a: u8,
@@ -25,7 +25,7 @@ mod decode;
 /// 
 /// // `#[derive(Decode)]` equivalent implementation
 /// impl Encode for Something {
-///   type Error = ();
+///   type Error = Error;
 /// 
 ///   fn encode_len(&self) -> Result<usize, Self::Error> {
 ///     Ok(1 + 2 + 3)
@@ -54,11 +54,11 @@ pub fn derive_encode_impl(input: TokenStream) -> TokenStream {
 
 /// `#[derive(Decode)]` support.
 /// 
-/// generates a [`Decode`][encdec_base::Decode] implementation equivalent to calling `.decode()` on each field in order.
+/// generates a [`Decode`][encdec_base::decode::Decode] implementation equivalent to calling `.decode()` on each field in order.
 /// 
 /// for example:
 /// ```
-/// # use encdec_base::Decode;
+/// # use encdec_base::{decode::Decode, Error};
 /// #[derive(Debug, PartialEq)]
 /// struct Something {
 ///     a: u8,
@@ -69,7 +69,7 @@ pub fn derive_encode_impl(input: TokenStream) -> TokenStream {
 /// // `#[derive(Decode)]` equivalent implementation
 /// impl <'a> Decode<'a> for Something {
 ///   type Output = Something;
-///   type Error = ();
+///   type Error = Error;
 /// 
 ///   fn decode(buff: &[u8]) -> Result<(Self::Output, usize), Self::Error> {
 ///     let mut index = 0;

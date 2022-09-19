@@ -8,6 +8,7 @@ edition = "2021"
 license = "MPL-2.0"
 
 [features]
+alloc = [ "encdec-base/alloc" ]
 heapless = [ "encdec-base/heapless" ]
 std = [ "encdec-base/std" ]
 

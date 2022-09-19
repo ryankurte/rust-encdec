@@ -10,11 +10,14 @@
 #[cfg(feature = "std")]
 extern crate std;
 
-mod encode;
-pub use encode::*;
+#[cfg(feature = "alloc")]
+extern crate alloc;
 
-mod decode;
-pub use decode::*;
+pub mod encode;
+use encode::Encode;
+
+pub mod decode;
+use decode::Decode;
 
 mod error;
 pub use error::Error;

@@ -9,13 +9,25 @@ use crate::Error;
 /// Encode trait implemented for binary encodable objects
 pub trait Encode: Debug {
     /// Error type returned on parse error
-    type Error: Debug;
+    type Error: From<Error> + Debug;
 
     /// Calculate expected encoded length for an object
     fn encode_len(&self) -> Result<usize, Self::Error>;
 
     /// Encode method writes object data to the provided writer
     fn encode(&self, buff: &mut [u8]) -> Result<usize, Self::Error>;
+}
+
+/// Encode trait extensions
+pub trait EncodeExt<'a>: Encode + Sized + 'a {
+    /// Helper to encode iterables
+    fn encode_iter(items: impl Iterator<Item=&'a Self>, buff: &mut [u8]) -> Result<usize, Self::Error> {
+        let mut index = 0;
+        for i in items {
+            index += i.encode(&mut buff[index..])?;
+        }
+        Ok(index)
+    }
 
     /// Helper to encode to a fixed size buffer
     fn encode_buff<const N: usize>(&self) -> Result<([u8; N], usize), Self::Error> {
@@ -25,13 +37,28 @@ pub trait Encode: Debug {
     }
 }
 
+impl <'a, T: Encode + 'a> EncodeExt<'a> for T { }
+
+/// Blanket encode for references to encodable types
+impl <T: Encode> Encode for &T {
+    type Error = <T as Encode>::Error;
+
+    fn encode_len(&self) -> Result<usize, Self::Error> {
+        <T as Encode>::encode_len(self)
+    }
+
+    fn encode(&self, buff: &mut [u8]) -> Result<usize, Self::Error> {
+        <T as Encode>::encode(self, buff)
+    }
+}
+
 /// Blanket [`Encode`] impl for slices of encodable types
-impl <T, E> Encode for &[T] 
+impl <T> Encode for &[T] 
 where
-    T: Encode<Error=E>,
-    E: From<Error> + Debug,
+    T: Encode,
+    <T as Encode>::Error: From<Error> + Debug,
 {
-    type Error = E;
+    type Error = <T as Encode>::Error;
 
     fn encode_len(&self) -> Result<usize, Self::Error> {
         let mut index = 0;
@@ -106,10 +133,33 @@ impl Encode for &str {
     }
 }
 
+
+#[cfg(feature = "alloc")]
+impl <T> Encode for alloc::vec::Vec<T> 
+where
+    T: Encode,
+    <T as Encode>::Error: From<Error> + Debug,
+{
+    type Error = <T as Encode>::Error;
+
+    #[inline]
+    fn encode_len(&self) -> Result<usize, Self::Error> {
+        let b: &[T] = self.as_ref();
+        b.encode_len()
+    }
+
+    #[inline]
+    fn encode(&self, buff: &mut [u8]) -> Result<usize, Self::Error> {
+        let b: &[T] = self.as_ref();
+        b.encode(buff)
+    }
+}
+
+
 /// Encode for fields with prefixed lengths
 pub trait EncodePrefixed<P: Encode> {
     /// Error type returned on parse error
-    type Error: Debug;
+    type Error: From<Error> + Debug;
 
     /// Parse method consumes a slice and returns an object
     fn encode_prefixed(&self, buff: &mut [u8]) -> Result<usize, Self::Error>;
