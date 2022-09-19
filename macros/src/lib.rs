@@ -17,6 +17,7 @@ mod attrs;
 /// for example:
 /// ```
 /// # use encdec_base::{encode::Encode, Error};
+/// # use bytes::BufMut;
 /// #[derive(Debug, PartialEq)]
 /// struct Something {
 ///     a: u8,
@@ -32,16 +33,15 @@ mod attrs;
 ///     Ok(1 + 2 + 3)
 ///   }
 /// 
-///   fn encode(&self, buff: &mut [u8]) -> Result<usize, Self::Error> {
+///   fn encode(&self, mut buff: impl BufMut) -> Result<usize, Self::Error> {
 ///     let mut index = 0;
-///     buff[index] = self.a;
+///     buff.put_u8(self.a);
 ///     index += 1;
 /// 
-///     buff[1] = self.b as u8;
-///     buff[2] = (self.b >> 8) as u8;
+///     buff.put_u16_le(self.b);
 ///     index += 2;
 /// 
-///     buff[3..][..3].copy_from_slice(&self.c);
+///     buff.put(&self.c[..]);
 ///     index += 3;
 ///     
 ///     Ok(index)

@@ -2,6 +2,7 @@
 //! 
 
 use byteorder::{LittleEndian as LE, ByteOrder};
+use bytes::BufMut;
 
 use crate::{Encode, Decode, Error};
 
@@ -15,7 +16,7 @@ trait FixedEncDec: Sized {
 
 /// Helper macro for implementing primitive encode / decode
 macro_rules! impl_encdec {
-    ($t:ty, $n:literal, $d:expr, $e:expr) => {
+    ($t:ty, $n:literal, $d:expr, $e:ident) => {
         impl <'a> Decode<'a> for $t {
             type Output = $t;
             type Error = Error;
@@ -41,12 +42,12 @@ macro_rules! impl_encdec {
             }
 
             #[inline]
-            fn encode(&self, buff: &mut [u8]) -> Result<usize, Self::Error> {
-                if buff.len() < $n {
+            fn encode(&self, mut buff: impl BufMut) -> Result<usize, Self::Error> {
+                if buff.remaining_mut() < $n {
                     return Err(Error::BufferOverrun);
                 }
 
-                $e(&mut buff[..$n], *self);
+                BufMut::$e(&mut buff, *self);
 
                 Ok($n)
             }
@@ -56,12 +57,12 @@ macro_rules! impl_encdec {
 
 impl_encdec!(u8,  1, get_u8, put_u8);
 impl_encdec!(i8,  1, get_i8, put_i8);
-impl_encdec!(u16, 2, LE::read_u16, LE::write_u16);
-impl_encdec!(i16, 2, LE::read_i16, LE::write_i16);
-impl_encdec!(u32, 4, LE::read_u32, LE::write_u32);
-impl_encdec!(i32, 4, LE::read_i32, LE::write_i32);
-impl_encdec!(u64, 8, LE::read_u64, LE::write_u64);
-impl_encdec!(i64, 8, LE::read_i64, LE::write_i64);
+impl_encdec!(u16, 2, LE::read_u16, put_u16_le);
+impl_encdec!(i16, 2, LE::read_i16, put_i16_le);
+impl_encdec!(u32, 4, LE::read_u32, put_u32_le);
+impl_encdec!(i32, 4, LE::read_i32, put_i32_le);
+impl_encdec!(u64, 8, LE::read_u64, put_u64_le);
+impl_encdec!(i64, 8, LE::read_i64, put_i64_le);
 
 
 #[inline]
@@ -72,14 +73,4 @@ fn get_u8(buff: &[u8]) -> u8 {
 #[inline]
 fn get_i8(buff: &[u8]) -> i8 {
     buff[0] as i8
-}
-
-#[inline]
-fn put_u8(buff: &mut [u8], val: u8) {
-    buff[0] = val;
-}
-
-#[inline]
-fn put_i8(buff: &mut [u8], val: i8) {
-    buff[0] = val as u8;
 }

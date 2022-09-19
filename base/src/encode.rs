@@ -2,6 +2,7 @@
 
 use core::{fmt::Debug};
 
+use bytes::BufMut;
 use num_traits::FromPrimitive;
 
 use crate::Error;
@@ -15,7 +16,7 @@ pub trait Encode: Debug {
     fn encode_len(&self) -> Result<usize, Self::Error>;
 
     /// Encode method writes object data to the provided writer
-    fn encode(&self, buff: &mut [u8]) -> Result<usize, Self::Error>;
+    fn encode(&self, buff: impl BufMut) -> Result<usize, Self::Error>;
 }
 
 /// Encode trait extensions
@@ -32,7 +33,7 @@ pub trait EncodeExt<'a>: Encode + Sized + 'a {
     /// Helper to encode to a fixed size buffer
     fn encode_buff<const N: usize>(&self) -> Result<([u8; N], usize), Self::Error> {
         let mut b = [0u8; N];
-        let n = self.encode(&mut b)?;
+        let n = self.encode(&mut b[..])?;
         Ok((b, n))
     }
 }
@@ -47,7 +48,7 @@ impl <T: Encode> Encode for &T {
         <T as Encode>::encode_len(self)
     }
 
-    fn encode(&self, buff: &mut [u8]) -> Result<usize, Self::Error> {
+    fn encode(&self, buff: impl BufMut) -> Result<usize, Self::Error> {
         <T as Encode>::encode(self, buff)
     }
 }
@@ -68,14 +69,14 @@ where
         Ok(index)
     }
 
-    fn encode(&self, buff: &mut [u8]) -> Result<usize, Self::Error> {
-        if buff.len() < self.encode_len()? {
+    fn encode(&self, mut buff: impl BufMut) -> Result<usize, Self::Error> {
+        if buff.remaining_mut() < self.encode_len()? {
             return Err(Error::BufferOverrun.into());
         }
 
         let mut index = 0;        
         for i in 0..self.len() {
-            index += self[i].encode(&mut buff[index..])?
+            index += self[i].encode(&mut buff)?
         }
 
         Ok(index)
@@ -99,14 +100,14 @@ where
         Ok(index)
     }
 
-    fn encode(&self, buff: &mut [u8]) -> Result<usize, Self::Error> {
-        if buff.len() < self.encode_len()? {
+    fn encode(&self, mut buff: impl BufMut) -> Result<usize, Self::Error> {
+        if buff.remaining_mut() < self.encode_len()? {
             return Err(Error::BufferOverrun.into());
         }
 
         let mut index = 0;        
         for i in 0..N {
-            index += self[i].encode(&mut buff[index..])?
+            index += self[i].encode(&mut buff)?
         }
 
         Ok(index)
@@ -121,13 +122,14 @@ impl Encode for &str {
         Ok(self.as_bytes().len())
     }
 
-    fn encode(&self, buff: &mut [u8]) -> Result<usize, Self::Error> {
+    fn encode(&self, mut buff: impl BufMut) -> Result<usize, Self::Error> {
         let d = self.as_bytes();
-        if buff.len() < d.encode_len()? {
+
+        if buff.remaining_mut() < d.encode_len()? {
             return Err(Error::BufferOverrun.into());
         }
 
-        buff[..d.len()].copy_from_slice(d);
+        buff.put(d);
 
         Ok(d.len())
     }
@@ -149,7 +151,7 @@ where
     }
 
     #[inline]
-    fn encode(&self, buff: &mut [u8]) -> Result<usize, Self::Error> {
+    fn encode(&self, buff: impl BufMut) -> Result<usize, Self::Error> {
         let b: &[T] = self.as_ref();
         b.encode(buff)
     }
@@ -173,15 +175,15 @@ where
 {
     type Error = <T as Encode>::Error;
 
-    fn encode_prefixed(&self, buff: &mut [u8]) -> Result<usize, Self::Error> {
+    fn encode_prefixed(&self, mut buff: &mut [u8]) -> Result<usize, Self::Error> {
         let mut index = 0;
 
         // Compute encoded length and write prefix
         let len = P::from_usize(self.encode_len()?).unwrap();
-        index += len.encode(buff)?;
+        index += len.encode(&mut buff)?;
 
         // Encode object
-        index += self.encode(&mut buff[index..])?;
+        index += self.encode(&mut buff)?;
 
         Ok(index)
     }

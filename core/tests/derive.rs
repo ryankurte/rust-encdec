@@ -1,6 +1,7 @@
 
 #![feature(generic_associated_types)]
 
+use bytes::BufMut;
 use rand::random;
 
 use encdec::{Encode, Decode, Error, helpers::test_encode_decode};
@@ -18,7 +19,7 @@ struct Basic {
 fn basic_derive() {
     let mut buff = [0u8; 256];
 
-    test_encode_decode(&mut buff, Basic{ a: random(), b: random(), c: random(), d: random() });
+    test_encode_decode(&mut buff[..], Basic{ a: random(), b: random(), c: random(), d: random() });
 }
 
 #[test]
@@ -26,7 +27,7 @@ fn basic_layout() {
     let t = Basic{ a: random(), b: random(), c: random(), d: random() };
     let mut buff = [0u8; 256];
 
-    let n = t.encode(&mut buff).unwrap();
+    let n = t.encode(&mut buff[..]).unwrap();
     assert_eq!(n, 15);
 
     assert_eq!(buff[0], t.a);
@@ -45,7 +46,7 @@ struct Arrays {
 fn array_derive() {
     let mut buff = [0u8; 256];
 
-    test_encode_decode(&mut buff, Arrays{ a: [random(), random(), random()] });
+    test_encode_decode(&mut buff[..], Arrays{ a: [random(), random(), random()] });
 }
 
 
@@ -56,7 +57,7 @@ struct Tuple(u8, u16);
 fn tuple_derive() {
     let mut buff = [0u8; 256];
 
-    test_encode_decode(&mut buff, Tuple(random(), random()) );
+    test_encode_decode(&mut buff[..], Tuple(random(), random()) );
 }
 
 
@@ -77,7 +78,7 @@ struct Refs<'a> {
 fn ref_derive() {
     let mut buff = [0u8; 256];
 
-    test_encode_decode(&mut buff, Refs{ l: 3, a: &[random(), random(), random()] });
+    test_encode_decode(&mut buff[..], Refs{ l: 3, a: &[random(), random(), random()] });
 }
 
 #[test]
@@ -85,7 +86,7 @@ fn ref_encode_len() {
     let mut buff = [0u8; 256];
     let t = Refs{ l: 0, a: &[random(), random()] };
 
-    let encoded_len = t.encode(&mut buff).unwrap();
+    let encoded_len = t.encode(&mut buff[..]).unwrap();
     assert_eq!(encoded_len, 3);
 
     let (d, decoded_len) = Refs::decode(&buff[..encoded_len]).unwrap();
@@ -107,20 +108,19 @@ fn overrides() {
 
     let a = random();
 
-    test_encode_decode(&mut buff, Overrides{ a });
+    test_encode_decode(&mut buff[..], Overrides{ a });
 
     assert_eq!(buff[0], 0xFF);
     assert_eq!(&buff[1..][..8], &a.to_be_bytes());
 }
 
-fn u64_enc(v: &u64, buff: &mut [u8]) -> Result<usize, Error> {
-    if buff.len() < 9 {
+fn u64_enc(v: &u64, mut buff: impl BufMut) -> Result<usize, Error> {
+    if buff.remaining_mut() < 9 {
         return Err(Error::BufferOverrun);
     }
 
-    buff[0] = 0xFF;
-
-    buff[1..][..8].copy_from_slice(&v.to_be_bytes());
+    buff.put_u8(0xFF);
+    buff.put(&v.to_be_bytes()[..]);
 
     Ok(9)
 }

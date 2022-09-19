@@ -15,7 +15,7 @@ pub fn test_encode_decode<'a, T>(buff: &'a mut [u8], v: T)
 where
     T: EncDec<'a> + PartialEq,
 {
-    let encoded_len = v.encode(buff).unwrap();
+    let encoded_len = v.encode(&mut buff[..]).unwrap();
     assert_eq!(encoded_len, v.encode_len().unwrap(), "actual and expected encode_len differ");
 
     let (decoded, decoded_len) = T::decode(&buff[..encoded_len]).expect("decode failed");

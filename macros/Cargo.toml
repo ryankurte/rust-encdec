@@ -10,6 +10,7 @@ license = "MPL-2.0"
 proc-macro = true
 
 [dependencies]
+bytes = { version = "1.2.1", default_features = false }
 syn = "1.0.99"
 quote = "1.0.21"
 darling = "0.14.1"

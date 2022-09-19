@@ -45,16 +45,16 @@ pub fn derive_encode_impl(input: TokenStream) -> TokenStream {
         let call_encode = match (attrs.encode, attrs.length_of) {
             // Encode method override
             (Some(e), _) => quote!{
-                index += #e(&self.#id, &mut buff[index..])?;
+                index += #e(&self.#id, &mut buff)?;
             },
             // Normal fields using normal encode
             (_, None) => quote!{ 
-                index += self.#id.encode(&mut buff[index..])?;
+                index += self.#id.encode(&mut buff)?;
             },
             // `length_of` types filled using length of target field
             (_, Some(v)) => quote!{ 
                 let n = self.#v.encode_len()?;
-                index += (n as #ty).encode(&mut buff[index..])?;
+                index += (n as #ty).encode(&mut buff)?;
             },
         };
 
@@ -84,7 +84,7 @@ pub fn derive_encode_impl(input: TokenStream) -> TokenStream {
                 Ok(index)
             }
             
-            fn encode(&self, buff: &mut [u8]) -> Result<usize, Self::Error> {
+            fn encode(&self, mut buff: impl bytes::BufMut) -> Result<usize, Self::Error> {
                 use ::encdec::Encode;
 
                 let mut index = 0;
