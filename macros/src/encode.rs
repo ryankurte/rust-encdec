@@ -45,27 +45,33 @@ pub fn derive_encode_impl(input: TokenStream) -> TokenStream {
 
         let ty = &f.ty;
 
-        let call_encode = match (attrs.encode, attrs.length_of) {
+        let call_encode = match (&attrs.with, &attrs.encode, &attrs.length_of) {
+            // Block / module override
+            (Some(m), _, _) => quote!{
+                _index += #m::enc(&self.#id, &mut buff[_index..])?;
+            },
             // Encode method override
-            (Some(e), _) => quote!{
-                index += #e(&self.#id, &mut buff[index..])?;
+            (_, Some(e), _) => quote!{
+                _index += #e(&self.#id, &mut buff[_index..])?;
             },
             // Normal fields using normal encode
-            (_, None) => quote!{ 
-                index += self.#id.encode(&mut buff[index..])?;
+            (_, _, None) => quote!{ 
+                _index += self.#id.encode(&mut buff[_index..])?;
             },
             // `length_of` types filled using length of target field
-            (_, Some(v)) => quote!{ 
+            (_, _, Some(v)) => quote!{ 
                 let n = self.#v.encode_len()?;
-                index += (n as #ty).encode(&mut buff[index..])?;
+                _index += (n as #ty).encode(&mut buff[_index..])?;
             },
         };
 
-        let call_len = match attrs.encode_len {
+        let call_len = match (&attrs.with, &attrs.encode_len) {
+            // Block / module override
+            (Some(m), _) => quote!{ _index += #m::enc_len(&self.#id)?; },
             // Encode length override
-            Some(l) => quote!{ index += #l(&self.#id)?; },
+            (_, Some(l)) => quote!{ _index += #l(&self.#id)?; },
             // Default encode length method
-            None => quote!{ index += self.#id.encode_len()?; },
+            (_, _) => quote!{ _index += self.#id.encode_len()?; },
         };
 
         encoders.extend(call_encode);
@@ -86,21 +92,21 @@ pub fn derive_encode_impl(input: TokenStream) -> TokenStream {
             fn encode_len(&self) -> Result<usize, Self::Error> {
                 use ::encdec::Encode;
 
-                let mut index = 0;
+                let mut _index = 0;
                 
                 #lengths
 
-                Ok(index)
+                Ok(_index)
             }
             
             fn encode(&self, buff: &mut [u8]) -> Result<usize, Self::Error> {
                 use ::encdec::Encode;
 
-                let mut index = 0;
+                let mut _index = 0;
                 
                 #encoders
 
-                Ok(index)
+                Ok(_index)
             }
         }
     }.into()

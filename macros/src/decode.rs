@@ -42,19 +42,23 @@ pub fn derive_decode_impl(input: TokenStream) -> TokenStream {
         // Parse field attributes
         let attrs = FieldAttrs::parse(f.attrs.iter());
 
-        match (attrs.decode, attrs.length) {    
-            (Some(d), _) => parsers.extend(quote!{
-                let (#id, n) = #d(&buff[index..])?;
-                index += n;
+        match (&attrs.with, &attrs.decode, &attrs.length) {
+            (Some(m), _, _) => parsers.extend(quote!{
+                let (#id, n) = #m::dec(&buff[_index..])?;
+                _index += n;
             }),
-            (_, None) => parsers.extend(quote!{
-                let (#id, n) = <#ty>::decode(&buff[index..])?;
-                index += n;
+            (_, Some(d), _) => parsers.extend(quote!{
+                let (#id, n) = #d(&buff[_index..])?;
+                _index += n;
             }),
-            (_, Some(l)) => parsers.extend(quote!{
+            (_, _, None) => parsers.extend(quote!{
+                let (#id, n) = <#ty>::decode(&buff[_index..])?;
+                _index += n;
+            }),
+            (_, _, Some(l)) => parsers.extend(quote!{
                 let n = #l as usize;
-                let #id = <#ty>::decode_len(&buff[index..], n)?;
-                index += n;
+                let #id = <#ty>::decode_len(&buff[_index..], n)?;
+                _index += n;
             }),
         }
 
@@ -85,11 +89,11 @@ pub fn derive_decode_impl(input: TokenStream) -> TokenStream {
             fn decode(buff: &'dec [u8]) -> Result<(Self::Output, usize), Self::Error> {
                 use ::encdec::decode::{Decode, DecodedTagged, DecodePrefixed};
 
-                let mut index = 0;
+                let mut _index = 0;
                 
                 #parsers
 
-                Ok((#obj, index))
+                Ok((#obj, _index))
             }
         }
     }.into()

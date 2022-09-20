@@ -113,31 +113,57 @@ fn override_enc_dec() {
     assert_eq!(&buff[1..][..8], &a.to_be_bytes());
 }
 
-fn u64_enc(v: &u64, buff: &mut [u8]) -> Result<usize, Error> {
-    if buff.len() < 9 {
-        return Err(Error::BufferOverrun);
-    }
+pub use u64_ovr::{enc as u64_enc, enc_len as u64_enc_len, dec as u64_dec};
 
-    buff[0] = 0xFF;
-
-    buff[1..][..8].copy_from_slice(&v.to_be_bytes());
-
-    Ok(9)
+/// Override encode and decode functions via macro
+#[derive(Debug, PartialEq, Encode, Decode)]
+struct OverrideWith {
+    #[encdec(with="u64_ovr")]
+    a: u64,
 }
 
-fn u64_enc_len(v: &u64) -> Result<usize, Error> {
-    Ok(9)
+#[test]
+fn override_enc_dec_with() {
+    let mut buff = [0u8; 256];
+
+    let a = random();
+
+    test_encode_decode(&mut buff, OverrideWith{ a });
+
+    assert_eq!(buff[0], 0xFF);
+    assert_eq!(&buff[1..][..8], &a.to_be_bytes());
 }
 
-fn u64_dec(buff: &[u8]) -> Result<(u64, usize), Error> {
-    if buff.len() < 9 {
-        return Err(Error::BufferOverrun);
+
+mod u64_ovr {
+    use encdec::Error;
+
+    pub fn enc(v: &u64, buff: &mut [u8]) -> Result<usize, Error> {
+        if buff.len() < 9 {
+            return Err(Error::BufferOverrun);
+        }
+    
+        buff[0] = 0xFF;
+    
+        buff[1..][..8].copy_from_slice(&v.to_be_bytes());
+    
+        Ok(9)
     }
-
-    let mut d = [0u8; 8];
-    d.copy_from_slice(&buff[1..][..8]);
-
-    Ok((u64::from_be_bytes(d), 9))
+    
+    pub fn enc_len(v: &u64) -> Result<usize, Error> {
+        Ok(9)
+    }
+    
+    pub fn dec(buff: &[u8]) -> Result<(u64, usize), Error> {
+        if buff.len() < 9 {
+            return Err(Error::BufferOverrun);
+        }
+    
+        let mut d = [0u8; 8];
+        d.copy_from_slice(&buff[1..][..8]);
+    
+        Ok((u64::from_be_bytes(d), 9))
+    }
 }
 
 /// Override error type via macro

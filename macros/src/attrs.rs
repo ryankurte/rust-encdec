@@ -81,6 +81,9 @@ pub struct FieldAttrs {
 
     /// Override decode method
     pub decode: Option<TokenStream>,
+
+    /// Override encode/length/decode with methods from module
+    pub with: Option<TokenStream>,
 }
 
 impl FieldAttrs {
@@ -112,6 +115,7 @@ impl Default for FieldAttrs {
             encode: None,
             encode_len: None,
             decode: None,
+            with: None,
         }
     }
 }
@@ -124,6 +128,7 @@ fn lit_to_quote(lit: &Lit) -> Option<TokenStream> {
             let i = syn::Ident::from_string(&f).unwrap();
             Some(quote!{ #i })
         },
+        Lit::Verbatim(v) => Some(quote!{ #v }),
         _ => None,
     }
 }
@@ -156,6 +161,8 @@ impl <'a, T: Iterator<Item=&'a NestedMeta>> From<T> for FieldAttrs {
                 s.length_of = Some(l.into());
 
             // Encode / decode function overrides
+            } else if v.path.is_ident("with") {
+                s.with = Some(l.into());
             } else if v.path.is_ident("enc") {
                 s.encode = Some(l.into());
             } else if v.path.is_ident("enc_len") {
