@@ -36,6 +36,21 @@ fn basic_layout() {
 }
 
 
+#[derive(Debug, PartialEq, Encode, encdec::DecodeOwned)]
+struct BasicOwned {
+    a: u8,
+    b: u16,
+    c: u32,
+    d: u64,
+}
+
+#[test]
+fn basic_owned_derive() {
+    let mut buff = [0u8; 256];
+
+    test_encode_decode(&mut buff, BasicOwned{ a: random(), b: random(), c: random(), d: random() });
+}
+
 #[derive(Debug, PartialEq, Encode, Decode)]
 struct Arrays {
     a: [u8; 3],
@@ -208,3 +223,9 @@ fn override_error() {
 
     assert_eq!(t, t1);
 }
+
+#[derive(Clone, Debug, PartialEq, Encode, Decode)]
+struct WithConst<const N: usize = 4> {
+    a: [u8; N],
+}
+

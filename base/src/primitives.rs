@@ -3,7 +3,7 @@
 
 use byteorder::{LittleEndian as LE, ByteOrder};
 
-use crate::{Encode, Decode, Error};
+use crate::{Encode, DecodeOwned, Error};
 
 /// Helper trait to implement encode/decode on fixed size types
 trait FixedEncDec: Sized {
@@ -16,12 +16,12 @@ trait FixedEncDec: Sized {
 /// Helper macro for implementing primitive encode / decode
 macro_rules! impl_encdec {
     ($t:ty, $n:literal, $d:expr, $e:expr) => {
-        impl <'a> Decode<'a> for $t {
+        impl DecodeOwned for $t {
             type Output = $t;
             type Error = Error;
 
             #[inline]
-            fn decode(buff: &'a[u8]) -> Result<(Self::Output, usize), Self::Error> {
+            fn decode_owned(buff: &[u8]) -> Result<(Self::Output, usize), Self::Error> {
                 if buff.len() < $n {
                     return Err(Error::BufferOverrun);
                 }

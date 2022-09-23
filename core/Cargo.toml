@@ -12,10 +12,12 @@ alloc = [ "encdec-base/alloc" ]
 heapless = [ "encdec-base/heapless" ]
 std = [ "encdec-base/std" ]
 
+default = [ "std", "alloc", "heapless" ]
+
 [dependencies]
 
-encdec-base = { version = "^0.6.0", default_features = false }
-encdec-macros = { version = "^0.6.0"}
+encdec-base = { version = "=0.6.2", default_features = false }
+encdec-macros = { version = "=0.6.2"}
 
 [dev-dependencies]
 rand = "0.8.5"

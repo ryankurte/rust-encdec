@@ -17,7 +17,7 @@ pub mod encode;
 use encode::Encode;
 
 pub mod decode;
-use decode::Decode;
+use decode::{Decode, DecodeOwned};
 
 mod error;
 pub use error::Error;

@@ -2,9 +2,10 @@
 
 use core::{fmt::Debug};
 
-use num_traits::FromPrimitive;
-
 use crate::Error;
+
+mod prefixed;
+pub use prefixed::EncodePrefixed;
 
 /// Encode trait implemented for binary encodable objects
 pub trait Encode: Debug {
@@ -155,34 +156,23 @@ where
     }
 }
 
-
-/// Encode for fields with prefixed lengths
-pub trait EncodePrefixed<P: Encode> {
-    /// Error type returned on parse error
-    type Error: From<Error> + Debug;
-
-    /// Parse method consumes a slice and returns an object
-    fn encode_prefixed(&self, buff: &mut [u8]) -> Result<usize, Self::Error>;
-}
-
-impl <'a, T, P> EncodePrefixed<P> for T 
+#[cfg(feature = "heapless")]
+impl <T, const N: usize> Encode for heapless::Vec<T, N> 
 where
     T: Encode,
-    P: Encode<Error=Error> + FromPrimitive,
-    <T as Encode>::Error: From<Error>,
+    <T as Encode>::Error: From<Error> + Debug,
 {
     type Error = <T as Encode>::Error;
 
-    fn encode_prefixed(&self, buff: &mut [u8]) -> Result<usize, Self::Error> {
-        let mut index = 0;
+    #[inline]
+    fn encode_len(&self) -> Result<usize, Self::Error> {
+        let b: &[T] = self.as_ref();
+        b.encode_len()
+    }
 
-        // Compute encoded length and write prefix
-        let len = P::from_usize(self.encode_len()?).unwrap();
-        index += len.encode(buff)?;
-
-        // Encode object
-        index += self.encode(&mut buff[index..])?;
-
-        Ok(index)
+    #[inline]
+    fn encode(&self, buff: &mut [u8]) -> Result<usize, Self::Error> {
+        let b: &[T] = self.as_ref();
+        b.encode(buff)
     }
 }

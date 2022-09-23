@@ -33,10 +33,10 @@
 pub use encdec_base::{
     EncDec, Error,
     encode::{self, Encode, EncodeExt},
-    decode::{self, Decode, DecodeExt},
+    decode::{self, Decode, DecodeOwned, DecodeExt},
 };
 
-pub use encdec_macros::{Encode, Decode};
+pub use encdec_macros::{Encode, Decode, DecodeOwned};
 
 pub mod helpers {
     //! Helpers for testing encode/decode objects as well as specialised encode/decode impls
