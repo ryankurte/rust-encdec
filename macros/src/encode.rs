@@ -1,10 +1,9 @@
+//! `#[derive(Encode)`] macro implementation
 
-
-use darling::FromMeta;
 use proc_macro::{TokenStream};
 
 use quote::{quote};
-use syn::{parse_macro_input, DeriveInput, Data, NestedMeta, Meta, Lit};
+use syn::{parse_macro_input, DeriveInput, Data};
 
 use crate::attrs::{FieldAttrs, StructAttrs};
 

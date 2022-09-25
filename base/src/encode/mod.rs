@@ -7,6 +7,9 @@ use crate::Error;
 mod prefixed;
 pub use prefixed::EncodePrefixed;
 
+mod ext;
+pub use ext::EncodeExt;
+
 /// Encode trait implemented for binary encodable objects
 pub trait Encode: Debug {
     /// Error type returned on parse error
@@ -19,26 +22,6 @@ pub trait Encode: Debug {
     fn encode(&self, buff: &mut [u8]) -> Result<usize, Self::Error>;
 }
 
-/// Encode trait extensions
-pub trait EncodeExt<'a>: Encode + Sized + 'a {
-    /// Helper to encode iterables
-    fn encode_iter(items: impl Iterator<Item=&'a Self>, buff: &mut [u8]) -> Result<usize, Self::Error> {
-        let mut index = 0;
-        for i in items {
-            index += i.encode(&mut buff[index..])?;
-        }
-        Ok(index)
-    }
-
-    /// Helper to encode to a fixed size buffer
-    fn encode_buff<const N: usize>(&self) -> Result<([u8; N], usize), Self::Error> {
-        let mut b = [0u8; N];
-        let n = self.encode(&mut b)?;
-        Ok((b, n))
-    }
-}
-
-impl <'a, T: Encode + 'a> EncodeExt<'a> for T { }
 
 /// Blanket encode for references to encodable types
 impl <T: Encode> Encode for &T {
@@ -134,7 +117,7 @@ impl Encode for &str {
     }
 }
 
-
+/// [`Encode`] implementation for std/alloc [`alloc::vec::Vec`] containing encodable types
 #[cfg(feature = "alloc")]
 impl <T> Encode for alloc::vec::Vec<T> 
 where
@@ -156,6 +139,7 @@ where
     }
 }
 
+/// [`Encode`] implementation for heapless [`heapless::Vec`] containing encodable types
 #[cfg(feature = "heapless")]
 impl <T, const N: usize> Encode for heapless::Vec<T, N> 
 where

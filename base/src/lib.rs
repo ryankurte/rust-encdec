@@ -1,9 +1,9 @@
 //! `encdec` base traits
 //! 
 
-#![feature(negative_impls)]
-#![feature(generic_associated_types)]
-#![feature(array_try_from_fn)]
+// Support initialising fixed size arrays, requires nightly
+// TODO: remove when [rust-lang:89379](https://github.com/rust-lang/rust/issues/89379)
+#![cfg_attr(feature = "nightly", feature(array_try_from_fn))]
 
 #![no_std]
 
@@ -26,7 +26,10 @@ pub mod primitives;
 
 pub mod helpers;
 
-/// Composite trait requiring an object is both encodable and decodable
+/// Composite trait requiring an object is reversibly encodable and decodable,
+/// useful for simplifying type bounds / generics.
+/// 
+/// (ie. `Self == <Self as Decode>::Output`)
 pub trait EncDec<'a>: Encode + Decode<'a, Output=Self> {}
 
 /// Automatic implementation for types implementing [`Encode`] and [`Decode`]

@@ -1,6 +1,4 @@
 
-#![feature(generic_associated_types)]
-
 use rand::random;
 
 use encdec::{helpers::test_encode_decode};

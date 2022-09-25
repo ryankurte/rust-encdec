@@ -1,14 +1,7 @@
 //! encdec test and encoding/decoding helpers
 //! 
 
-use core::{
-    fmt::Debug,
-    str::from_utf8,
-};
-
-use num_traits::AsPrimitive;
-
-use crate::{EncDec, Decode, Error};
+use crate::{EncDec};
 
 /// Helper for writing encode_decode tests for encodable objects
 pub fn test_encode_decode<'a, T>(buff: &'a mut [u8], v: T)

@@ -1,5 +1,4 @@
 
-#![feature(generic_associated_types)]
 
 use rand::random;
 
@@ -51,11 +50,13 @@ fn basic_owned_derive() {
     test_encode_decode(&mut buff, BasicOwned{ a: random(), b: random(), c: random(), d: random() });
 }
 
+#[cfg(feature = "nightly")]
 #[derive(Debug, PartialEq, Encode, Decode)]
 struct Arrays {
     a: [u8; 3],
 }
 
+#[cfg(feature = "nightly")]
 #[test]
 fn array_derive() {
     let mut buff = [0u8; 256];
@@ -224,6 +225,7 @@ fn override_error() {
     assert_eq!(t, t1);
 }
 
+#[cfg(feature = "nightly")]
 #[derive(Clone, Debug, PartialEq, Encode, Decode)]
 struct WithConst<const N: usize = 4> {
     a: [u8; N],

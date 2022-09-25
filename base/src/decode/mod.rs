@@ -29,7 +29,10 @@ pub trait Decode<'a>: Sized {
 }
 
 
-/// Blanket [`Decode`] impl for slices of encodable types
+/// Blanket [`Decode`] impl for slices of encodable types.
+/// 
+/// Note this is _greedy_ (ie. will continue until the buffer is exhausted).
+#[cfg(feature = "nightly")]
 impl <'a, T, const N: usize> Decode<'a> for [T; N] 
 where
     T: Decode<'a>,
@@ -42,8 +45,8 @@ where
     fn decode(buff: &'a [u8]) -> Result<(Self::Output, usize), Self::Error> {
         
         let mut index = 0;
-        
-        let d = core::array::try_from_fn(|_i| {
+
+        let decoded = core::array::try_from_fn(|_i| {
             match T::decode(&buff[index..]) {
                 Ok((o, l)) => {
                     index += l;
@@ -53,9 +56,6 @@ where
             }
         })?;
 
-        Ok((d, index))
+        Ok((decoded, index))
     }
 }
-
-
-

@@ -3,7 +3,7 @@ use core::fmt::Debug;
 use crate::Error;
 use super::Decode;
 
-/// Decode for fields with prefixed lengths
+/// Decode helper trait for fields with length prefixes
 pub trait DecodePrefixed<'a, P: Decode<'a>> {
     /// Output type (required for lifetime bounds)
     type Output: Debug;

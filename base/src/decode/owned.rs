@@ -4,7 +4,9 @@ use core::fmt::Debug;
 use crate::Error;
 use super::Decode;
 
-/// Decode trait for owned types, avoids lifetime constraints
+/// Decode trait implemented for owned types
+/// 
+/// This allows eliding lifetime constraints for owned (ie. self-contained, not reference) types and provides a blanket [`Decode`] implementation
 pub trait DecodeOwned {
     /// Output type
     type Output: Debug;

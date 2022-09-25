@@ -22,6 +22,13 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - toolchain: stable
+          - toolchain: nightly
+            args: --features=nightly 
+
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
@@ -30,11 +37,11 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: nightly
+          toolchain: ${{ matrix.toolchain }}
           override: true
 
       - name: Run cargo test
         uses: actions-rs/cargo@v1
         with:
           command: test
-
+          args: ${{ matrix.args }}

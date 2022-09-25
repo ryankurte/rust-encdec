@@ -1,10 +1,9 @@
-
+//! `#[derive(Decode)`] macro implementation
 
 use proc_macro::{TokenStream};
 
-use darling::{FromMeta};
 use quote::{quote};
-use syn::{parse_macro_input, DeriveInput, Data, Fields, Ident, Meta, NestedMeta, Lifetime, Lit, ConstParam};
+use syn::{parse_macro_input, DeriveInput, Data, Fields, Ident, Lifetime};
 
 use crate::attrs::{FieldAttrs, StructAttrs};
 
@@ -29,7 +28,7 @@ pub fn derive_decode_impl(input: TokenStream, owned: bool) -> TokenStream {
     let mut fields = quote!{};
 
     // Fetch bounds for generics
-    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+    let (_impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
     s.fields.iter().enumerate().for_each(|(i, f)| {
         let ty = &f.ty;

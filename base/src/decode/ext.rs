@@ -7,7 +7,7 @@ use core::{
 use crate::Error;
 use super::Decode;
 
-/// Decode trait extensions
+/// Extensions to [`Decode`] trait for decodable objects
 pub trait DecodeExt<'a>: Decode<'a> {
     /// Helper to iterate over decodable objects in a _sized_ buffer.
     /// 
@@ -21,6 +21,7 @@ pub trait DecodeExt<'a>: Decode<'a> {
     }
 }
 
+/// Blanket implementation for all [`Decode`] types
 impl <'a, T: Decode<'a>> DecodeExt<'a> for T {}
 
 

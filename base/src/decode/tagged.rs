@@ -1,10 +1,11 @@
+//! UNSTABLE/INCOMPLETE Decode helper trait for for fields with external length tags
+//! 
 
 use core::fmt::Debug;
 
 use crate::Error;
-use super::Decode;
 
-/// Decode for fields with tagged lengths
+/// Decode helper trait for for fields with external length tags
 /// (length _must_ be specified via `#[encdec(length=...)]` macro)
 pub trait DecodedTagged<'a> {
     /// Output type (required for lifetime bounds)
