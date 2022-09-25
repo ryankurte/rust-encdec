@@ -17,7 +17,7 @@ default = [ "std", "alloc", "heapless" ]
 [dependencies]
 
 encdec-base = { version = "=0.8.0", default_features = false }
-encdec-macros = { version = "=0.7.1"}
+encdec-macros = { version = "=0.8.0"}
 
 [dev-dependencies]
 rand = "0.8.5"
