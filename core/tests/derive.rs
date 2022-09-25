@@ -166,7 +166,7 @@ mod u64_ovr {
         Ok(9)
     }
     
-    pub fn enc_len(v: &u64) -> Result<usize, Error> {
+    pub fn enc_len(_v: &u64) -> Result<usize, Error> {
         Ok(9)
     }
     
