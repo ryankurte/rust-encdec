@@ -23,7 +23,7 @@ macro_rules! impl_encdec {
             #[inline]
             fn decode_owned(buff: &[u8]) -> Result<(Self::Output, usize), Self::Error> {
                 if buff.len() < $n {
-                    return Err(Error::BufferOverrun);
+                    return Err(Error::Length);
                 }
 
                 let v = $d(&buff[..$n]);
@@ -43,7 +43,7 @@ macro_rules! impl_encdec {
             #[inline]
             fn encode(&self, buff: &mut [u8]) -> Result<usize, Self::Error> {
                 if buff.len() < $n {
-                    return Err(Error::BufferOverrun);
+                    return Err(Error::Length);
                 }
 
                 $e(&mut buff[..$n], *self);

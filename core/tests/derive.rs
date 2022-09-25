@@ -156,7 +156,7 @@ mod u64_ovr {
 
     pub fn enc(v: &u64, buff: &mut [u8]) -> Result<usize, Error> {
         if buff.len() < 9 {
-            return Err(Error::BufferOverrun);
+            return Err(Error::Length);
         }
     
         buff[0] = 0xFF;
@@ -172,7 +172,7 @@ mod u64_ovr {
     
     pub fn dec(buff: &[u8]) -> Result<(u64, usize), Error> {
         if buff.len() < 9 {
-            return Err(Error::BufferOverrun);
+            return Err(Error::Length);
         }
     
         let mut d = [0u8; 8];
@@ -198,8 +198,8 @@ enum NewError {
 impl From<encdec::Error> for NewError {
     fn from(e: encdec::Error) -> Self {
         match e {
-            Error::BufferOverrun => Self::Length,
-            Error::Utf8Error => Self::Utf8,
+            Error::Length => Self::Length,
+            Error::Utf8 => Self::Utf8,
         }
     }
 }

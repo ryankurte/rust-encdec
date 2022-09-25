@@ -54,7 +54,7 @@ where
 
     fn encode(&self, buff: &mut [u8]) -> Result<usize, Self::Error> {
         if buff.len() < self.encode_len()? {
-            return Err(Error::BufferOverrun.into());
+            return Err(Error::Length.into());
         }
 
         let mut index = 0;        
@@ -85,7 +85,7 @@ where
 
     fn encode(&self, buff: &mut [u8]) -> Result<usize, Self::Error> {
         if buff.len() < self.encode_len()? {
-            return Err(Error::BufferOverrun.into());
+            return Err(Error::Length.into());
         }
 
         let mut index = 0;        
@@ -108,7 +108,7 @@ impl Encode for &str {
     fn encode(&self, buff: &mut [u8]) -> Result<usize, Self::Error> {
         let d = self.as_bytes();
         if buff.len() < d.encode_len()? {
-            return Err(Error::BufferOverrun.into());
+            return Err(Error::Length.into());
         }
 
         buff[..d.len()].copy_from_slice(d);

@@ -26,7 +26,7 @@ impl <'a>DecodedTagged<'a> for &[u8] {
 
     fn decode_len(buff: &'a [u8], len: usize) -> Result<Self::Output, Self::Error> {
         if buff.len() < len {
-            return Err(Error::BufferOverrun);
+            return Err(Error::Length);
         }
 
         Ok(&buff[..len])
@@ -41,12 +41,12 @@ impl <'a>DecodedTagged<'a> for &str {
 
     fn decode_len(buff: &'a [u8], len: usize) -> Result<Self::Output, Self::Error> {
         if buff.len() < len {
-            return Err(Error::BufferOverrun);
+            return Err(Error::Length);
         }
 
         match core::str::from_utf8(&buff[..len]) {
             Ok(v) => Ok(v),
-            Err(_e) => Err(Error::Utf8Error),
+            Err(_e) => Err(Error::Utf8),
         }
     }
 }

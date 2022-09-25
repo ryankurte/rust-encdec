@@ -74,7 +74,7 @@ where
             let (d, n) = T::decode(&buff[index..])?;
 
             if let Err(_e) = v.push(d) {
-                return Err(Error::BufferOverrun.into())
+                return Err(Error::Length.into())
             }
 
             index += n;
