@@ -2,7 +2,7 @@
 name = "encdec-base"
 description = "encdec simple encoder/decoder base types and traits"
 repository = "https://github.com/ryankurte/rust-encdec"
-version = "0.7.0"
+version = "0.7.1"
 edition = "2021"
 license = "MPL-2.0"
 

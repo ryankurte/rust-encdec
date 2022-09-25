@@ -16,7 +16,7 @@ default = [ "std", "alloc", "heapless" ]
 
 [dependencies]
 
-encdec-base = { version = "=0.7.0", default_features = false }
+encdec-base = { version = "=0.7.1", default_features = false }
 encdec-macros = { version = "=0.7.0"}
 
 [dev-dependencies]
