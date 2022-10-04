@@ -29,6 +29,35 @@ impl <'a, T: DecodeOwned> Decode<'a> for T {
     }
 }
 
+/// [`DecodeOwned`] for `[T; N]`s containing [`DecodeOwned`] types
+#[cfg(feature = "nightly")]
+impl <T, const N: usize> DecodeOwned for [T; N] 
+where
+    T: DecodeOwned<Output=T> + Debug,
+    <T as DecodeOwned>::Error: From<Error> + Debug,
+{
+    type Error = <T as DecodeOwned>::Error;
+
+    type Output = [<T as DecodeOwned>::Output; N];
+
+    fn decode_owned(buff: &[u8]) -> Result<(Self::Output, usize), Self::Error> {
+        let mut index = 0;
+
+        let decoded = core::array::try_from_fn(|_i| {
+            match T::decode(&buff[index..]) {
+                Ok((o, l)) => {
+                    index += l;
+                    Ok(o)
+                },
+                Err(e) => Err(e),
+            }
+        })?;
+
+        Ok((decoded, index))
+    }
+}
+
+
 /// [`DecodeOwned`] for [`alloc::vec::Vec`]s containing [`DecodeOwned`] types
 #[cfg(feature = "alloc")]
 impl <T> DecodeOwned for alloc::vec::Vec<T> 
