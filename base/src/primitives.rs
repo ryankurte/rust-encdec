@@ -62,6 +62,8 @@ impl_encdec!(u32, 4, LE::read_u32, LE::write_u32);
 impl_encdec!(i32, 4, LE::read_i32, LE::write_i32);
 impl_encdec!(u64, 8, LE::read_u64, LE::write_u64);
 impl_encdec!(i64, 8, LE::read_i64, LE::write_i64);
+impl_encdec!(f32, 4, LE::read_f32, LE::write_f32);
+impl_encdec!(f64, 8, LE::read_f64, LE::write_f64);
 
 
 #[inline]
