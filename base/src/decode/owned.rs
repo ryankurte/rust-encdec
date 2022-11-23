@@ -29,6 +29,30 @@ impl <'a, T: DecodeOwned> Decode<'a> for T {
     }
 }
 
+#[cfg(not(feature = "nightly"))]
+impl<T, const N: usize> DecodeOwned for [T; N]
+where
+    T: DecodeOwned<Output=T> + Debug + Default + Copy,
+    <T as DecodeOwned>::Error: From<Error> + Debug,
+{
+    type Error = <T as DecodeOwned>::Error;
+    type Output = [<T as DecodeOwned>::Output; N];
+
+    fn decode_owned(buff: &[u8]) -> Result<(Self::Output, usize), Self::Error> {
+        let mut data: [T; N] = [T::default(); N];
+
+        let mut offset = 0;
+        for value in data.iter_mut() {
+            let (output, length) = T::decode_owned(&buff[offset..])?;
+            offset += length;
+            *value = output;
+        }
+
+        Ok((data, offset))
+    }
+}
+
+
 /// [`DecodeOwned`] for `[T; N]`s containing [`DecodeOwned`] types
 #[cfg(feature = "nightly")]
 impl <T, const N: usize> DecodeOwned for [T; N] 
