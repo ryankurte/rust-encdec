@@ -104,8 +104,7 @@ pub fn derive_decode_impl(input: TokenStream, owned: bool) -> TokenStream {
     for g in &generic_types {
         // Look for types with Decode bounds
         let a = g.bounds.iter().find_map(|v| {
-            println!("t: {:?}", v);
-            
+
             // Find trait bounds
             let t = match v {            
                 TypeParamBound::Trait(t) => t,
