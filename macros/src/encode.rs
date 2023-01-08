@@ -3,7 +3,7 @@
 use proc_macro::{TokenStream};
 
 use quote::{quote};
-use syn::{parse_macro_input, DeriveInput, Data};
+use syn::{parse_macro_input, DeriveInput, Data, TypeParamBound};
 
 use crate::attrs::{FieldAttrs, StructAttrs};
 
@@ -22,7 +22,7 @@ pub fn derive_encode_impl(input: TokenStream) -> TokenStream {
     let struct_attrs = StructAttrs::parse(attrs.iter());
 
     // Fetch bounds for generics
-    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+    let (impl_generics, ty_generics, _where_clause) = generics.split_for_impl();
 
     // Build parser for each field
     let mut encoders = quote!{};
@@ -82,6 +82,52 @@ pub fn derive_encode_impl(input: TokenStream) -> TokenStream {
         Some(e) => quote!(#e),
         None => quote!(::encdec::Error),
     };
+
+    // Setup where bounds on generic types
+    
+    // Extract existing predicates
+    let mut where_bounds = match &generics.where_clause {
+        Some(v) => {
+            v.predicates.iter().map(|v| quote!(#v) ).collect()
+        },
+        _ => vec![],
+    };
+
+    // Add error bounds for Encode types
+    for g in generics.type_params() {
+        // Look for types with Decode bounds
+        let a = g.bounds.iter().find_map(|v| {
+            match v {            
+                TypeParamBound::Trait(t) if t.path.is_ident("Encode") => Some(t),
+                _ => return None,
+            }
+        });
+
+        // Skip non-Decode types (probably not possible?)
+        let a = match a {
+            Some(v) => v,
+            None => continue,
+        };
+
+        // Fetch type
+        let t = &g.ident;
+
+        // Append where clause
+        let w = quote!(
+            #err: From<<#t as #a>::Error>,
+        );
+
+        where_bounds.push(w);
+    }
+
+    // Build where clause
+    let mut where_clause = None;
+    if where_bounds.len() > 0 {
+        where_clause = Some(quote! {
+            where
+                #(#where_bounds),*
+        });
+    }
 
     quote! {
         impl #impl_generics ::encdec::Encode for #ident #ty_generics #where_clause {

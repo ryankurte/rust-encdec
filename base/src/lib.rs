@@ -5,6 +5,8 @@
 // TODO: remove when [rust-lang:89379](https://github.com/rust-lang/rust/issues/89379)
 #![cfg_attr(feature = "nightly", feature(array_try_from_fn))]
 
+#![cfg_attr(feature = "nightly", feature(associated_type_defaults))]
+
 #![no_std]
 
 #[cfg(feature = "std")]
