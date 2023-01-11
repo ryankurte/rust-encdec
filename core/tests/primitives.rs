@@ -1,7 +1,6 @@
-
 use rand::random;
 
-use encdec::{helpers::test_encode_decode};
+use encdec::helpers::test_encode_decode;
 
 #[test]
 fn encode_decode_u8() {

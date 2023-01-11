@@ -5,7 +5,7 @@ use core::fmt::Debug;
 use crate::Error;
 
 mod owned;
-pub use owned::DecodeOwned;
+pub use owned::{DecodeOwned};
 
 mod ext;
 pub use ext::{DecodeExt, DecodeIter};

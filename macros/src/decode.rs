@@ -3,7 +3,7 @@
 use proc_macro::{TokenStream};
 
 use quote::{quote};
-use syn::{parse_macro_input, DeriveInput, Data, Fields, Ident, Lifetime};
+use syn::{parse_macro_input, DeriveInput, Data, Fields, Ident, Lifetime, TypeParamBound, WhereClause, parse::Parse};
 
 use crate::attrs::{FieldAttrs, StructAttrs};
 
@@ -28,7 +28,7 @@ pub fn derive_decode_impl(input: TokenStream, owned: bool) -> TokenStream {
     let mut fields = quote!{};
 
     // Fetch bounds for generics
-    let (_impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+    let (_impl_generics, ty_generics, _where_clause) = generics.split_for_impl();
 
     s.fields.iter().enumerate().for_each(|(i, f)| {
         let ty = &f.ty;
@@ -57,6 +57,7 @@ pub fn derive_decode_impl(input: TokenStream, owned: bool) -> TokenStream {
             }),
             (_, _, None) => parsers.extend(quote!{
                 let (#id, n) = <#ty>::decode(&buff[_index..])?;
+                let #id = #id.into();
                 _index += n;
             }),
         }
@@ -70,11 +71,14 @@ pub fn derive_decode_impl(input: TokenStream, owned: bool) -> TokenStream {
         Fields::Unit => quote!(Self{#fields}),
     };
 
-    let lts: Vec<_> = generics.lifetimes()
+    let lifetimes: Vec<_> = generics.lifetimes()
         .map(|v| Lifetime::from(v.lifetime.clone()) )
         .collect();
 
-    let gs: Vec<_> = generics.const_params()
+    
+    let generic_types: Vec<_> = generics.type_params().collect();
+
+    let const_params: Vec<_> = generics.const_params()
         .map(|v| {
             let mut v = v.clone();
             v.eq_token = None;
@@ -88,9 +92,67 @@ pub fn derive_decode_impl(input: TokenStream, owned: bool) -> TokenStream {
         None => quote!(::encdec::Error),
     };
 
+    // Extract where bounds
+    let mut where_bounds = match &generics.where_clause {
+        Some(v) => {
+            v.predicates.iter().map(|v| quote!(#v) ).collect()
+        },
+        _ => vec![],
+    };
+
+    // Add where bounds for Decode types
+    for g in &generic_types {
+        // Look for types with Decode bounds
+        let a = g.bounds.iter().find_map(|v| {
+
+            // Find trait bounds
+            let t = match v {            
+                TypeParamBound::Trait(t) => t,
+                _ => return None,
+            };
+
+            // Match decode bounds
+            let s = match t.path.segments.first() {
+                Some(v) if v.ident == "Decode" => v,
+                Some(v) if v.ident == "DecodeOwned" => v,
+                _ => return None,
+            };
+
+            Some(v)
+        });
+
+        // Skip non-Decode types (probably not possible?)
+        let a = match a {
+            Some(v) => v,
+            None => continue,
+        };
+
+        // Fetch type
+        let t = &g.ident;
+
+        // Append where clause
+        let w = quote!(
+            #t: From<<#t as #a>::Output>,
+            #err: From<<#t as #a>::Error>,
+        );
+
+        where_bounds.push(w);
+    }
+
+    // Build where clause
+    let mut where_clause = None;
+    if where_bounds.len() > 0 {
+        where_clause = Some(quote! {
+            where
+                #(#where_bounds),*
+        });
+    }
+
+    //panic!("bounds: {}", TokenStream::from(where_clause.unwrap()));
+
     match owned {
         false => quote! {
-            impl <'dec: #(#lts)+*, #(#lts),* #(#gs),*> ::encdec::Decode<'dec> for #ident #ty_generics #where_clause {
+            impl <'dec: #(#lifetimes)+*, #(#lifetimes),* #(#generic_types),* #(#const_params),*> ::encdec::Decode<'dec> for #ident #ty_generics #where_clause {
                 type Output = Self;
                 type Error = #err;
                 
@@ -106,7 +168,7 @@ pub fn derive_decode_impl(input: TokenStream, owned: bool) -> TokenStream {
             }
         },
         true => quote! {
-            impl <#(#lts),* #(#gs),*> ::encdec::DecodeOwned for #ident #ty_generics #where_clause {
+            impl <#(#lifetimes),* #(#generic_types),* #(#const_params),*> ::encdec::DecodeOwned for #ident #ty_generics #where_clause {
                 type Output = Self;
                 type Error = #err;
                 
