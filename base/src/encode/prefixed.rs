@@ -2,8 +2,8 @@ use core::fmt::Debug;
 
 use num_traits::FromPrimitive;
 
-use crate::Error;
 use super::Encode;
+use crate::Error;
 
 /// Encode for fields with length prefixes
 pub trait EncodePrefixed<P: Encode> {
@@ -14,10 +14,10 @@ pub trait EncodePrefixed<P: Encode> {
     fn encode_prefixed(&self, buff: &mut [u8]) -> Result<usize, Self::Error>;
 }
 
-impl <'a, T, P> EncodePrefixed<P> for T 
+impl<'a, T, P> EncodePrefixed<P> for T
 where
     T: Encode,
-    P: Encode<Error=Error> + FromPrimitive,
+    P: Encode<Error = Error> + FromPrimitive,
     <T as Encode>::Error: From<Error>,
 {
     type Error = <T as Encode>::Error;

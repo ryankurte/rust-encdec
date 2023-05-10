@@ -1,17 +1,24 @@
 //! `#[derive(Decode)`] macro implementation
 
-use proc_macro::{TokenStream};
+use proc_macro::TokenStream;
 
-use quote::{quote};
-use syn::{parse_macro_input, DeriveInput, Data, Fields, Ident, Lifetime, TypeParamBound, WhereClause, parse::Parse};
+use quote::quote;
+use syn::{
+    parse::Parse, parse_macro_input, Data, DeriveInput, Fields, Ident, Lifetime, TypeParamBound,
+    WhereClause,
+};
 
 use crate::attrs::{FieldAttrs, StructAttrs};
 
-
 /// Decode derive helper
 pub fn derive_decode_impl(input: TokenStream, owned: bool) -> TokenStream {
-
-    let DeriveInput { ident, data, generics, attrs, .. } = parse_macro_input!(input);
+    let DeriveInput {
+        ident,
+        data,
+        generics,
+        attrs,
+        ..
+    } = parse_macro_input!(input);
 
     // Extract struct fields
     let s = match data {
@@ -22,10 +29,9 @@ pub fn derive_decode_impl(input: TokenStream, owned: bool) -> TokenStream {
     // Parse struct attributes
     let struct_attrs = StructAttrs::parse(attrs.iter());
 
-
     // Build parser for each field
-    let mut parsers = quote!{};
-    let mut fields = quote!{};
+    let mut parsers = quote! {};
+    let mut fields = quote! {};
 
     // Fetch bounds for generics
     let (_impl_generics, ty_generics, _where_clause) = generics.split_for_impl();
@@ -42,27 +48,27 @@ pub fn derive_decode_impl(input: TokenStream, owned: bool) -> TokenStream {
         let attrs = FieldAttrs::parse(f.attrs.iter());
 
         match (&attrs.with, &attrs.decode, &attrs.length) {
-            (Some(m), _, _) => parsers.extend(quote!{
+            (Some(m), _, _) => parsers.extend(quote! {
                 let (#id, n) = #m::dec(&buff[_index..])?;
                 _index += n;
             }),
-            (_, Some(d), _) => parsers.extend(quote!{
+            (_, Some(d), _) => parsers.extend(quote! {
                 let (#id, n) = #d(&buff[_index..])?;
                 _index += n;
             }),
-            (_, _, Some(l)) => parsers.extend(quote!{
+            (_, _, Some(l)) => parsers.extend(quote! {
                 let n = #l as usize;
                 let #id = <#ty>::decode_len(&buff[_index..], n)?;
                 _index += n;
             }),
-            (_, _, None) => parsers.extend(quote!{
+            (_, _, None) => parsers.extend(quote! {
                 let (#id, n) = <#ty>::decode(&buff[_index..])?;
                 let #id = #id.into();
                 _index += n;
             }),
         }
 
-        fields.extend(quote!{ #id, })
+        fields.extend(quote! { #id, })
     });
 
     let obj = match s.fields {
@@ -71,20 +77,22 @@ pub fn derive_decode_impl(input: TokenStream, owned: bool) -> TokenStream {
         Fields::Unit => quote!(Self{#fields}),
     };
 
-    let lifetimes: Vec<_> = generics.lifetimes()
-        .map(|v| Lifetime::from(v.lifetime.clone()) )
+    let lifetimes: Vec<_> = generics
+        .lifetimes()
+        .map(|v| Lifetime::from(v.lifetime.clone()))
         .collect();
 
-    
     let generic_types: Vec<_> = generics.type_params().collect();
 
-    let const_params: Vec<_> = generics.const_params()
+    let const_params: Vec<_> = generics
+        .const_params()
         .map(|v| {
             let mut v = v.clone();
             v.eq_token = None;
             v.default = None;
             v
-        }).collect();
+        })
+        .collect();
 
     // Override error return type if specified
     let err = match struct_attrs.error {
@@ -94,9 +102,7 @@ pub fn derive_decode_impl(input: TokenStream, owned: bool) -> TokenStream {
 
     // Extract where bounds
     let mut where_bounds = match &generics.where_clause {
-        Some(v) => {
-            v.predicates.iter().map(|v| quote!(#v) ).collect()
-        },
+        Some(v) => v.predicates.iter().map(|v| quote!(#v)).collect(),
         _ => vec![],
     };
 
@@ -104,9 +110,8 @@ pub fn derive_decode_impl(input: TokenStream, owned: bool) -> TokenStream {
     for g in &generic_types {
         // Look for types with Decode bounds
         let a = g.bounds.iter().find_map(|v| {
-
             // Find trait bounds
-            let t = match v {            
+            let t = match v {
                 TypeParamBound::Trait(t) => t,
                 _ => return None,
             };

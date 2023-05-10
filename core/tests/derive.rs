@@ -1,5 +1,6 @@
 use core::fmt::Debug;
 
+use encdec_base::{EncDec, EncDecOwned};
 use rand::random;
 
 use encdec::{helpers::test_encode_decode, Decode, DecodeOwned, Encode, Error};
@@ -262,6 +263,6 @@ struct WithConst<const N: usize = 4> {
 }
 
 #[derive(Clone, Debug, PartialEq, Encode, Decode)]
-struct SomeGeneric<M: Encode + DecodeOwned + Debug> {
+struct SomeGeneric<M: EncDecOwned + Debug> {
     m: M,
 }

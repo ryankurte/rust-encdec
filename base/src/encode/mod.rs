@@ -1,6 +1,6 @@
 //! [`Encode`] trait implementation
 
-use core::{fmt::Debug};
+use core::fmt::Debug;
 
 use crate::Error;
 
@@ -22,9 +22,8 @@ pub trait Encode: Debug {
     fn encode(&self, buff: &mut [u8]) -> Result<usize, Self::Error>;
 }
 
-
 /// Blanket encode for references to encodable types
-impl <T: Encode> Encode for &T {
+impl<T: Encode> Encode for &T {
     type Error = <T as Encode>::Error;
 
     fn encode_len(&self) -> Result<usize, Self::Error> {
@@ -37,7 +36,7 @@ impl <T: Encode> Encode for &T {
 }
 
 /// Blanket [`Encode`] impl for slices of encodable types
-impl <T> Encode for &[T] 
+impl<T> Encode for &[T]
 where
     T: Encode,
     <T as Encode>::Error: From<Error> + Debug,
@@ -57,18 +56,17 @@ where
             return Err(Error::Length.into());
         }
 
-        let mut index = 0;        
+        let mut index = 0;
         for i in 0..self.len() {
             index += self[i].encode(&mut buff[index..])?
         }
 
         Ok(index)
     }
-
 }
 
 /// Blanket [`Encode`] impl for arrays of encodable types
-impl <T, const N: usize> Encode for [T; N] 
+impl<T, const N: usize> Encode for [T; N]
 where
     T: Encode,
     <T as Encode>::Error: From<Error> + Debug,
@@ -88,7 +86,7 @@ where
             return Err(Error::Length.into());
         }
 
-        let mut index = 0;        
+        let mut index = 0;
         for i in 0..N {
             index += self[i].encode(&mut buff[index..])?
         }
@@ -119,7 +117,7 @@ impl Encode for &str {
 
 /// [`Encode`] implementation for std/alloc [`alloc::vec::Vec`] containing encodable types
 #[cfg(feature = "alloc")]
-impl <T> Encode for alloc::vec::Vec<T> 
+impl<T> Encode for alloc::vec::Vec<T>
 where
     T: Encode,
     <T as Encode>::Error: From<Error> + Debug,
@@ -141,7 +139,7 @@ where
 
 /// [`Encode`] implementation for heapless [`heapless::Vec`] containing encodable types
 #[cfg(feature = "heapless")]
-impl <T, const N: usize> Encode for heapless::Vec<T, N> 
+impl<T, const N: usize> Encode for heapless::Vec<T, N>
 where
     T: Encode,
     <T as Encode>::Error: From<Error> + Debug,

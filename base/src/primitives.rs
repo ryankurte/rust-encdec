@@ -1,9 +1,9 @@
 //! Encode/Decode implementations for primitive types
-//! 
+//!
 
-use byteorder::{LittleEndian as LE, ByteOrder};
+use byteorder::{ByteOrder, LittleEndian as LE};
 
-use crate::{Encode, DecodeOwned, Error};
+use crate::{DecodeOwned, Encode, Error};
 
 /// Helper trait to implement encode/decode on fixed size types
 trait FixedEncDec: Sized {
@@ -54,8 +54,8 @@ macro_rules! impl_encdec {
     };
 }
 
-impl_encdec!(u8,  1, get_u8, put_u8);
-impl_encdec!(i8,  1, get_i8, put_i8);
+impl_encdec!(u8, 1, get_u8, put_u8);
+impl_encdec!(i8, 1, get_i8, put_i8);
 impl_encdec!(u16, 2, LE::read_u16, LE::write_u16);
 impl_encdec!(i16, 2, LE::read_i16, LE::write_i16);
 impl_encdec!(u32, 4, LE::read_u32, LE::write_u32);
@@ -64,7 +64,6 @@ impl_encdec!(u64, 8, LE::read_u64, LE::write_u64);
 impl_encdec!(i64, 8, LE::read_i64, LE::write_i64);
 impl_encdec!(f32, 4, LE::read_f32, LE::write_f32);
 impl_encdec!(f64, 8, LE::read_f64, LE::write_f64);
-
 
 #[inline]
 fn get_u8(buff: &[u8]) -> u8 {

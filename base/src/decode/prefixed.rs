@@ -1,7 +1,7 @@
 use core::fmt::Debug;
 
-use crate::Error;
 use super::Decode;
+use crate::Error;
 
 /// Decode helper trait for fields with length prefixes
 pub trait DecodePrefixed<'a, P: Decode<'a>> {
@@ -15,10 +15,10 @@ pub trait DecodePrefixed<'a, P: Decode<'a>> {
     fn decode_prefixed(buff: &'a [u8]) -> Result<(Self::Output, usize), Self::Error>;
 }
 
-impl <'a, T, P> DecodePrefixed<'a, P> for T 
+impl<'a, T, P> DecodePrefixed<'a, P> for T
 where
     T: Decode<'a>,
-    P: Decode<'a, Error=Error>,
+    P: Decode<'a, Error = Error>,
     <P as Decode<'a>>::Output: num_traits::AsPrimitive<usize>,
     <T as Decode<'a>>::Error: From<Error>,
 {

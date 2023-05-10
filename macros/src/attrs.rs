@@ -1,9 +1,8 @@
 use proc_macro2::TokenStream;
 
-use darling::{FromMeta};
-use quote::{quote};
-use syn::{Attribute, Meta, NestedMeta, Lit};
-
+use darling::FromMeta;
+use quote::quote;
+use syn::{Attribute, Lit, Meta, NestedMeta};
 
 #[derive(Clone, Debug)]
 pub struct StructAttrs {
@@ -13,25 +12,23 @@ pub struct StructAttrs {
 
 impl Default for StructAttrs {
     fn default() -> Self {
-        Self { 
-            error: None,
-        }
+        Self { error: None }
     }
 }
 
 impl StructAttrs {
     /// Parse [`StructAttrs`] object from field attributes
-    pub fn parse<'a>(attrs: impl Iterator<Item=&'a Attribute>) -> Self {
+    pub fn parse<'a>(attrs: impl Iterator<Item = &'a Attribute>) -> Self {
         // Filter for `encdec` attribute group
         let attribute_args = attrs
-            .filter_map(|v| v.parse_meta().ok() )
+            .filter_map(|v| v.parse_meta().ok())
             .find(|v| v.path().is_ident("encdec"))
             .map(|v| match v {
                 Meta::List(l) => Some(l.nested),
                 _ => None,
             })
             .flatten();
-        
+
         let attrs = match attribute_args {
             Some(a) => a,
             None => return Default::default(),
@@ -88,17 +85,17 @@ pub struct FieldAttrs {
 
 impl FieldAttrs {
     /// Parse [`Attrs`] object from field attributes
-    pub fn parse<'a>(attrs: impl Iterator<Item=&'a Attribute>) -> Self {
+    pub fn parse<'a>(attrs: impl Iterator<Item = &'a Attribute>) -> Self {
         // Filter for `encdec` attribute group
         let attribute_args = attrs
-            .filter_map(|v| v.parse_meta().ok() )
+            .filter_map(|v| v.parse_meta().ok())
             .find(|v| v.path().is_ident("encdec"))
             .map(|v| match v {
                 Meta::List(l) => Some(l.nested),
                 _ => None,
             })
             .flatten();
-        
+
         // Parse encdec attributes
         match attribute_args {
             Some(a) => FieldAttrs::from(a.iter()),
@@ -109,7 +106,7 @@ impl FieldAttrs {
 
 impl Default for FieldAttrs {
     fn default() -> Self {
-        Self { 
+        Self {
             length: None,
             length_of: None,
             encode: None,
@@ -122,19 +119,19 @@ impl Default for FieldAttrs {
 
 fn lit_to_quote(lit: &Lit) -> Option<TokenStream> {
     match lit {
-        Lit::Int(v) => Some(quote!{ #v }),
+        Lit::Int(v) => Some(quote! { #v }),
         Lit::Str(v) => {
             let f = v.value();
             let i = syn::Ident::from_string(&f).unwrap();
-            Some(quote!{ #i })
-        },
-        Lit::Verbatim(v) => Some(quote!{ #v }),
+            Some(quote! { #i })
+        }
+        Lit::Verbatim(v) => Some(quote! { #v }),
         _ => None,
     }
 }
 
 /// Create [`Attrs`] object from [`NestedMeta`] fields
-impl <'a, T: Iterator<Item=&'a NestedMeta>> From<T> for FieldAttrs {
+impl<'a, T: Iterator<Item = &'a NestedMeta>> From<T> for FieldAttrs {
     fn from(args: T) -> Self {
         let mut s = Self::default();
 

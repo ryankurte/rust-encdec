@@ -1,5 +1,5 @@
 //! UNSTABLE/INCOMPLETE Decode helper trait for for fields with external length tags
-//! 
+//!
 
 use core::fmt::Debug;
 
@@ -20,7 +20,7 @@ pub trait DecodedTagged<'a> {
 
 /// [`DecodedTagged`] impl for byte arrays
 /// (requires `#[encdec(length=...)]` length delimiter)
-impl <'a>DecodedTagged<'a> for &[u8] {
+impl<'a> DecodedTagged<'a> for &[u8] {
     type Output = &'a [u8];
     type Error = Error;
 
@@ -35,7 +35,7 @@ impl <'a>DecodedTagged<'a> for &[u8] {
 
 /// [`DecodedTagged`] impl for string slices (`&str`)
 /// (requires `#[encdec(length=...)]` length delimiter)
-impl <'a>DecodedTagged<'a> for &str {
+impl<'a> DecodedTagged<'a> for &str {
     type Output = &'a str;
     type Error = Error;
 

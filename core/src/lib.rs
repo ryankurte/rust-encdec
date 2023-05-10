@@ -12,7 +12,7 @@
 #![no_std]
 
 // Re-export base traits
-pub use encdec_base::{EncDec, Error};
+pub use encdec_base::{EncDec, EncDecOwned, Error};
 
 // Re-export traits from modules here
 pub use crate::decode::{Decode, DecodeExt, DecodeOwned};

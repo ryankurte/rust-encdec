@@ -1,11 +1,10 @@
-
 use core::fmt::Debug;
 
-use crate::Error;
 use super::Decode;
+use crate::Error;
 
 /// Decode trait implemented for owned types
-/// 
+///
 /// This allows eliding lifetime constraints for owned (ie. self-contained, not reference) types and provides a blanket [`Decode`] implementation
 pub trait DecodeOwned {
     /// Output type
@@ -19,7 +18,7 @@ pub trait DecodeOwned {
 }
 
 /// Blanket [`Decode`] impl for [`DecodeOwned`] types
-impl <'a, T: DecodeOwned> Decode<'a> for T {
+impl<'a, T: DecodeOwned> Decode<'a> for T {
     type Output = <T as DecodeOwned>::Output;
 
     type Error = <T as DecodeOwned>::Error;
@@ -32,7 +31,7 @@ impl <'a, T: DecodeOwned> Decode<'a> for T {
 #[cfg(not(feature = "nightly"))]
 impl<T, const N: usize> DecodeOwned for [T; N]
 where
-    T: DecodeOwned<Output=T> + Debug + Default + Copy,
+    T: DecodeOwned<Output = T> + Debug + Default + Copy,
     <T as DecodeOwned>::Error: From<Error> + Debug,
 {
     type Error = <T as DecodeOwned>::Error;
@@ -52,12 +51,11 @@ where
     }
 }
 
-
 /// [`DecodeOwned`] for `[T; N]`s containing [`DecodeOwned`] types
 #[cfg(feature = "nightly")]
-impl <T, const N: usize> DecodeOwned for [T; N] 
+impl<T, const N: usize> DecodeOwned for [T; N]
 where
-    T: DecodeOwned<Output=T> + Debug,
+    T: DecodeOwned<Output = T> + Debug,
     <T as DecodeOwned>::Error: From<Error> + Debug,
 {
     type Error = <T as DecodeOwned>::Error;
@@ -67,26 +65,23 @@ where
     fn decode_owned(buff: &[u8]) -> Result<(Self::Output, usize), Self::Error> {
         let mut index = 0;
 
-        let decoded = core::array::try_from_fn(|_i| {
-            match T::decode(&buff[index..]) {
-                Ok((o, l)) => {
-                    index += l;
-                    Ok(o)
-                },
-                Err(e) => Err(e),
+        let decoded = core::array::try_from_fn(|_i| match T::decode(&buff[index..]) {
+            Ok((o, l)) => {
+                index += l;
+                Ok(o)
             }
+            Err(e) => Err(e),
         })?;
 
         Ok((decoded, index))
     }
 }
 
-
 /// [`DecodeOwned`] for [`alloc::vec::Vec`]s containing [`DecodeOwned`] types
 #[cfg(feature = "alloc")]
-impl <T> DecodeOwned for alloc::vec::Vec<T> 
+impl<T> DecodeOwned for alloc::vec::Vec<T>
 where
-    T: DecodeOwned<Output=T> + Debug,
+    T: DecodeOwned<Output = T> + Debug,
     <T as DecodeOwned>::Error: From<Error> + Debug,
 {
     type Error = <T as DecodeOwned>::Error;
@@ -110,9 +105,9 @@ where
 
 /// [`DecodeOwned`] for [`heapless::Vec`]s containing [`DecodeOwned`] types
 #[cfg(feature = "heapless")]
-impl <T, const N: usize> DecodeOwned for heapless::Vec<T, N> 
+impl<T, const N: usize> DecodeOwned for heapless::Vec<T, N>
 where
-    T: DecodeOwned<Output=T> + Debug,
+    T: DecodeOwned<Output = T> + Debug,
     <T as DecodeOwned>::Error: From<Error> + Debug,
 {
     type Error = <T as DecodeOwned>::Error;
@@ -127,7 +122,7 @@ where
             let (d, n) = T::decode(&buff[index..])?;
 
             if let Err(_e) = v.push(d) {
-                return Err(Error::Length.into())
+                return Err(Error::Length.into());
             }
 
             index += n;

@@ -1,16 +1,12 @@
+use core::{fmt::Debug, marker::PhantomData};
 
-use core::{
-    fmt::Debug,
-    marker::PhantomData,
-};
-
-use crate::Error;
 use super::Decode;
+use crate::Error;
 
 /// Extensions to [`Decode`] trait for decodable objects
 pub trait DecodeExt<'a>: Decode<'a> {
     /// Helper to iterate over decodable objects in a _sized_ buffer.
-    /// 
+    ///
     /// Note that objects must be -internally- sized as this is a greedy operation
     fn decode_iter(buff: &'a [u8]) -> DecodeIter<'a, Self::Output> {
         DecodeIter {
@@ -22,8 +18,7 @@ pub trait DecodeExt<'a>: Decode<'a> {
 }
 
 /// Blanket implementation for all [`Decode`] types
-impl <'a, T: Decode<'a>> DecodeExt<'a> for T {}
-
+impl<'a, T: Decode<'a>> DecodeExt<'a> for T {}
 
 /// Helper type for parsing lists of decodable objects (with internal length delimiters)
 #[derive(Debug)]
@@ -40,7 +35,11 @@ where
 {
     /// Create a new [`DecodeIter`] instance over the provided buffer
     pub fn new(buff: &'a [u8]) -> Self {
-        Self{ buff, index: 0, _t: PhantomData }
+        Self {
+            buff,
+            index: 0,
+            _t: PhantomData,
+        }
     }
 }
 
@@ -79,6 +78,10 @@ where
     <T as Decode<'a>>::Error: From<Error> + Debug,
 {
     fn clone(&self) -> Self {
-        Self{ buff: self.buff, index: 0, _t: PhantomData }
+        Self {
+            buff: self.buff,
+            index: 0,
+            _t: PhantomData,
+        }
     }
 }
