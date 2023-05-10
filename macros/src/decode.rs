@@ -5,7 +5,6 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{
     parse::Parse, parse_macro_input, Data, DeriveInput, Fields, Ident, Lifetime, TypeParamBound,
-    WhereClause,
 };
 
 use crate::attrs::{FieldAttrs, StructAttrs};
@@ -117,7 +116,7 @@ pub fn derive_decode_impl(input: TokenStream, owned: bool) -> TokenStream {
             };
 
             // Match decode bounds
-            let s = match t.path.segments.first() {
+            let _s = match t.path.segments.first() {
                 Some(v) if v.ident == "Decode" => v,
                 Some(v) if v.ident == "DecodeOwned" => v,
                 _ => return None,

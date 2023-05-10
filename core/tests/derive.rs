@@ -1,9 +1,9 @@
 use core::fmt::Debug;
 
-use encdec_base::{EncDec, EncDecOwned};
+use encdec_base::EncDecOwned;
 use rand::random;
 
-use encdec::{helpers::test_encode_decode, Decode, DecodeOwned, Encode, Error};
+use encdec::{helpers::test_encode_decode, Decode, Encode, Error};
 
 #[derive(Debug, PartialEq, Encode, Decode)]
 struct Basic {
