@@ -23,6 +23,7 @@ pub trait Encode: Debug {
 }
 
 /// Blanket encode for references to encodable types
+#[cfg(nope)]
 impl<T: Encode> Encode for &T {
     type Error = <T as Encode>::Error;
 

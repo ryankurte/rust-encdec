@@ -3,6 +3,12 @@
 
 use crate::EncDec;
 
+#[cfg(feature = "bitflags")]
+mod bitflags;
+
+#[cfg(feature = "bitflags")]
+pub use bitflags::EncDecBitflags;
+
 /// Helper for writing encode_decode tests for encodable objects
 pub fn test_encode_decode<'a, T>(buff: &'a mut [u8], v: T)
 where

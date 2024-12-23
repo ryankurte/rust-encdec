@@ -12,6 +12,7 @@ alloc = [ "encdec-base/alloc" ]
 heapless = [ "encdec-base/heapless" ]
 std = [ "encdec-base/std" ]
 nightly = []
+bitflags = [ "encdec-base/bitflags" ]
 
 default = [ "std", "alloc", "heapless" ]
 

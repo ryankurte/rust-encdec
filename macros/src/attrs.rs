@@ -117,7 +117,7 @@ impl Default for FieldAttrs {
     }
 }
 
-fn lit_to_quote(lit: &Lit) -> Option<TokenStream> {
+pub(crate) fn lit_to_quote(lit: &Lit) -> Option<TokenStream> {
     match lit {
         Lit::Int(v) => Some(quote! { #v }),
         Lit::Str(v) => {

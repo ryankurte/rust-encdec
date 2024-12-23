@@ -10,6 +10,8 @@ pub enum Error {
     Length,
     /// Invalid UTF8 in string
     Utf8,
+    /// Invalid enum variant
+    Variant,
 }
 
 impl From<Infallible> for Error {

@@ -224,6 +224,7 @@ struct OverrideError {
 enum NewError {
     Length,
     Utf8,
+    Variant,
 }
 
 impl From<encdec::Error> for NewError {
@@ -231,6 +232,7 @@ impl From<encdec::Error> for NewError {
         match e {
             Error::Length => Self::Length,
             Error::Utf8 => Self::Utf8,
+            Error::Variant => Self::Variant,
         }
     }
 }
@@ -245,12 +247,14 @@ fn override_error() {
         Ok(n) => n,
         Err(NewError::Length) => panic!(),
         Err(NewError::Utf8) => panic!(),
+        Err(NewError::Variant) => panic!(),
     };
 
     let (t1, _n1) = match OverrideError::decode(&buff[..n]) {
         Ok(v) => v,
         Err(NewError::Length) => panic!(),
         Err(NewError::Utf8) => panic!(),
+        Err(NewError::Variant) => panic!(),
     };
 
     assert_eq!(t, t1);
@@ -265,4 +269,25 @@ struct WithConst<const N: usize = 4> {
 #[derive(Clone, Debug, PartialEq, Encode, Decode)]
 struct SomeGeneric<M: EncDecOwned + Debug> {
     m: M,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Encode, Decode)]
+#[repr(u8)]
+pub enum TestEnum {
+    A = 1,
+    B = 2,
+}
+
+#[test]
+fn enum_encdec() {
+    let tests = &[
+        TestEnum::A,
+        TestEnum::B,
+    ];
+
+    let mut buff = [0u8; 2];
+
+    for t in tests {
+        test_encode_decode(&mut buff, *t);
+    }
 }

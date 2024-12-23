@@ -9,14 +9,17 @@ license = "MPL-2.0"
 [features]
 alloc = []
 heapless = [ "dep:heapless" ]
+thiserror = [ "dep:thiserror" ]
+bitflags = [ "dep:bitflags" ]
 std = [ "dep:thiserror" ]
 nightly = []
 
-default = [ "std", "alloc", "heapless" ]
+default = [ "std", "alloc", "heapless", "bitflags" ]
 
 [dependencies]
 byteorder = { version = "1.4.3", default_features = false }
 num-traits = { version = "0.2.15", default_features = false }
 
-heapless = { version = "0.7.16", default_features = false, optional = true }
-thiserror = { version = "1.0.35", default_features = false, optional = true  }
+bitflags = { version = "2.6.0", optional = true, default_features = false }
+heapless = { version = "0.8.0", default_features = false, optional = true }
+thiserror = { version = "2.0.7", default_features = false, optional = true  }

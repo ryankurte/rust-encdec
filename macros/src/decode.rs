@@ -4,7 +4,7 @@ use proc_macro::TokenStream;
 
 use quote::quote;
 use syn::{
-    parse::Parse, parse_macro_input, Data, DeriveInput, Fields, Ident, Lifetime, TypeParamBound,
+    parse::Parse, parse_macro_input, Attribute, Data, DataEnum, DataStruct, DeriveInput, Fields, Generics, Ident, Lifetime, TypeParamBound
 };
 
 use crate::attrs::{FieldAttrs, StructAttrs};
@@ -20,10 +20,69 @@ pub fn derive_decode_impl(input: TokenStream, owned: bool) -> TokenStream {
     } = parse_macro_input!(input);
 
     // Extract struct fields
-    let s = match data {
-        Data::Struct(s) => s,
+    match &data.clone() {
+        Data::Struct(s) => derive_decode_impl_struct(owned, ident, data, generics, attrs, s.clone()),
+        Data::Enum(e) => derive_decode_impl_enum(ident, data, generics, attrs, e.clone()),
         _ => panic!("Unsupported object type for derivation"),
+    }
+}
+
+fn derive_decode_impl_enum(ident: Ident, data: Data, generics: Generics, attrs: Vec<Attribute>, s: DataEnum) -> TokenStream {
+    // Find repr path
+    let repr = match attrs.iter().filter_map(|a| a.parse_meta().ok()).find(|a| a.path().is_ident("repr") ) {
+        Some(r) => r,
+        None => panic!("Cannot derive encdec::Decode for enums without #[repr(type)]"),
     };
+
+    // Extract repr type (for example, #[repr(u8)] becomes u8)
+    let base = match &repr {
+        syn::Meta::List(list) => match list.nested.first().unwrap() {
+            syn::NestedMeta::Meta(meta) => meta.path().get_ident().clone(),
+            syn::NestedMeta::Lit(lit) => panic!("Unexpected lit: {lit:?}"),
+        },
+        _ => panic!("Unexpected repr: {:?}", repr),
+    };
+
+    let mut variants = quote!{};
+
+    // Construct matche arms for each variant using the discriminant
+    s.variants.iter().for_each(|v| {
+        let i = &v.ident;
+        let (_, d) = match &v.discriminant {
+            Some(d) => d,
+            None => panic!("Cannot impl decode for enum {ident} variant {i} (no discriminant)"),
+        };
+
+        variants.extend(quote!{
+            #d => #ident::#i,
+        });
+    });
+
+    //panic!("variants: {:?}", variants.to_string());
+
+    // Build decode implementation
+    quote! {
+        impl ::encdec::DecodeOwned for #ident {
+            type Output = Self;
+            type Error = encdec::Error;
+            
+            fn decode_owned(buff: &[u8]) -> Result<(Self::Output, usize), Self::Error> {
+                use ::encdec::decode::{DecodeOwned};
+                
+                let (v, n) = <#base as DecodeOwned>::decode_owned(buff)?;
+
+                let obj = match v {
+                    #variants
+                    _ => return Err(encdec::Error::Variant),
+                };
+
+                Ok((obj, n))
+            }
+        }
+    }.into()  
+}
+
+fn derive_decode_impl_struct(owned: bool, ident: Ident, _data: Data, generics: Generics, attrs: Vec<Attribute>, s: DataStruct) -> TokenStream {
 
     // Parse struct attributes
     let struct_attrs = StructAttrs::parse(attrs.iter());
